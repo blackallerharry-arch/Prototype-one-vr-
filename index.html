@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mini VR Block Room v2</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#10141b;font-family:system-ui,Arial}
+#hud{position:fixed;z-index:5;left:12px;top:12px;color:#fff;background:#0009;padding:10px 12px;border-radius:10px;line-height:1.35}
+#vr{position:fixed;z-index:6;right:12px;top:12px;border:0;border-radius:10px;padding:12px 16px;font-weight:700}
+#msg{position:fixed;z-index:5;left:50%;bottom:20px;transform:translateX(-50%);color:white;background:#0009;padding:8px 12px;border-radius:999px}
+</style>
+</head>
+<body>
+<div id="hud"><b>Mini VR Block Room</b><br>
+VR: point at a block and press trigger.<br>
+Desktop: click a block. Drag the mouse to look around.
+</div>
+<button id="vr">ENTER VR</button><div id="msg">Find a block</div>
+
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+import {VRButton} from "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/webxr/VRButton.js";
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x151c27);
+scene.fog=new THREE.Fog(0x151c27,8,20);
+
+const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.05,60);
+camera.position.set(0,1.65,4);
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.xr.enabled=true;
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const realVR=VRButton.createButton(renderer);
+realVR.style.display="none";
+document.body.appendChild(realVR);
+document.querySelector("#vr").onclick=()=>realVR.click();
+
+scene.add(new THREE.HemisphereLight(0xbfd8ff,0x26303b,1.8));
+const sun=new THREE.DirectionalLight(0xffffff,3.2);
+sun.position.set(2,6,3); sun.castShadow=true;
+sun.shadow.mapSize.set(1024,1024); scene.add(sun);
+
+const floor=new THREE.Mesh(
+ new THREE.BoxGeometry(8,.2,8),
+ new THREE.MeshStandardMaterial({color:0x555e68,roughness:.9})
+);
+floor.position.y=-.1; floor.receiveShadow=true; scene.add(floor);
+
+function makeWall(x,y,z,sx,sy,sz){
+ const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),
+ new THREE.MeshStandardMaterial({color:0x2d3540,roughness:.8}));
+ m.position.set(x,y,z);m.receiveShadow=true;scene.add(m);
+}
+makeWall(0,2,-4,8,4,.2); makeWall(-4,2,0,.2,4,8); makeWall(4,2,0,.2,4,8);
+
+const blocks=[];
+const colors=[0xe95f5f,0x5b9be8,0x63c777,0xe7b94f,0xb46be8,0x4fc7c7];
+
+function block(i,x,y,z){
+ const b=new THREE.Mesh(
+  new THREE.BoxGeometry(.55,.55,.55),
+  new THREE.MeshStandardMaterial({color:colors[i%colors.length],roughness:.6,metalness:.05})
+ );
+ b.position.set(x,y,z);b.castShadow=true;b.receiveShadow=true;
+ b.userData.vel=new THREE.Vector3();
+ b.userData.held=false;
+ scene.add(b);blocks.push(b);
+}
+[[-1.5,.28,-1.2],[-.75,.28,-1.2],[0,.28,-1.2],[.75,.28,-1.2],[1.5,.28,-1.2],
+ [-.75,.83,-1.2],[0,.83,-1.2]].forEach((p,i)=>block(i,...p));
+
+const raycaster=new THREE.Raycaster();
+const tempQ=new THREE.Quaternion();
+const tempV=new THREE.Vector3();
+let held=null,heldController=null;
+
+function grab(b,controller=null){
+ if(held){held.userData.held=false;held=null;heldController=null}
+ held=b;b.userData.held=true;heldController=controller;
+ document.querySelector("#msg").textContent="Block picked up — press again to release";
+}
+
+function release(){
+ if(!held)return;
+ held.userData.held=false;
+ if(heldController){
+  tempV.set(0,0,-1).applyQuaternion(heldController.getWorldQuaternion(tempQ)).multiplyScalar(3);
+  held.userData.vel.copy(tempV);
+ } else {
+  tempV.set(0,0,-1).applyQuaternion(camera.quaternion).multiplyScalar(2);
+  held.userData.vel.copy(tempV);
+ }
+ held=null;heldController=null;
+ document.querySelector("#msg").textContent="Block released";
+}
+
+addEventListener("pointerdown",e=>{
+ const mouse=new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);
+ raycaster.setFromCamera(mouse,camera);
+ const hit=raycaster.intersectObjects(blocks)[0];
+ if(hit) held===hit.object?release():grab(hit.object);
+});
+
+const controllers=[];
+for(let i=0;i<2;i++){
+ const c=renderer.xr.getController(i);
+ c.addEventListener("selectstart",()=>{
+  const origin=new THREE.Vector3().setFromMatrixPosition(c.matrixWorld);
+  const q=c.getWorldQuaternion(tempQ);
+  const dir=new THREE.Vector3(0,0,-1).applyQuaternion(q);
+  raycaster.set(origin,dir);
+  const hit=raycaster.intersectObjects(blocks)[0];
+  if(hit && hit.distance<5) held===hit.object?release():grab(hit.object,c);
+ });
+ scene.add(c);controllers.push(c);
+}
+
+let mouseLook=false,lastX=0,lastY=0;
+addEventListener("pointermove",e=>{
+ if(!mouseLook || renderer.xr.isPresenting)return;
+ const dx=e.clientX-lastX,dy=e.clientY-lastY;
+ camera.rotation.order="YXZ";
+ camera.rotation.y-=dx*.003;
+ camera.rotation.x=Math.max(-1.45,Math.min(1.45,camera.rotation.x-dy*.003));
+ lastX=e.clientX;lastY=e.clientY;
+});
+addEventListener("pointerdown",e=>{if(!renderer.xr.isPresenting){mouseLook=true;lastX=e.clientX;lastY=e.clientY}});
+addEventListener("pointerup",()=>mouseLook=false);
+
+const clock=new THREE.Clock();
+function animate(){
+ const dt=Math.min(clock.getDelta(),.033);
+
+ if(held){
+  if(renderer.xr.isPresenting && heldController){
+   const origin=new THREE.Vector3().setFromMatrixPosition(heldController.matrixWorld);
+   const dir=new THREE.Vector3(0,0,-1).applyQuaternion(heldController.getWorldQuaternion(tempQ));
+   held.position.copy(origin).addScaledVector(dir,1.15);
+   held.userData.vel.set(0,0,0);
+  }else{
+   const dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+   held.position.copy(camera.position).addScaledVector(dir,1.2);
+   held.userData.vel.set(0,0,0);
+  }
+ }
+
+ for(const b of blocks){
+  if(b.userData.held)continue;
+  const v=b.userData.vel;
+  v.y-=7*dt;
+  b.position.addScaledVector(v,dt);
+  const half=.275;
+  if(b.position.y<half){b.position.y=half;v.y*=-.25;v.x*=.92;v.z*=.92}
+  if(b.position.x<-3.7||b.position.x>3.7)v.x*=-.4;
+  if(b.position.z<-3.7||b.position.z>3.7)v.z*=-.4;
+ }
+ renderer.render(scene,camera);
+}
+renderer.setAnimationLoop(animate);
+
+addEventListener("resize",()=>{
+ camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+ renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+</body>
+</html>
