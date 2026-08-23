@@ -3,172 +3,1112 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Mini VR Block Room v2</title>
+<title>Mini VR Block Room v3</title>
+
 <style>
-html,body{margin:0;height:100%;overflow:hidden;background:#10141b;font-family:system-ui,Arial}
-#hud{position:fixed;z-index:5;left:12px;top:12px;color:#fff;background:#0009;padding:10px 12px;border-radius:10px;line-height:1.35}
-#vr{position:fixed;z-index:6;right:12px;top:12px;border:0;border-radius:10px;padding:12px 16px;font-weight:700}
-#msg{position:fixed;z-index:5;left:50%;bottom:20px;transform:translateX(-50%);color:white;background:#0009;padding:8px 12px;border-radius:999px}
+html,body{
+ margin:0;
+ height:100%;
+ overflow:hidden;
+ background:#10141b;
+ font-family:system-ui,Arial
+}
+
+#hud{
+ position:fixed;
+ z-index:5;
+ left:12px;
+ top:12px;
+ color:#fff;
+ background:#0009;
+ padding:10px 12px;
+ border-radius:10px;
+ line-height:1.35
+}
+
+#vr{
+ position:fixed;
+ z-index:6;
+ right:12px;
+ top:12px;
+ border:0;
+ border-radius:10px;
+ padding:12px 16px;
+ font-weight:700
+}
+
+#msg{
+ position:fixed;
+ z-index:5;
+ left:50%;
+ bottom:20px;
+ transform:translateX(-50%);
+ color:white;
+ background:#0009;
+ padding:8px 12px;
+ border-radius:999px
+}
 </style>
 </head>
+
 <body>
-<div id="hud"><b>Mini VR Block Room</b><br>
+
+<div id="hud">
+<b>Mini VR Block Room</b><br>
 VR: point at a block and press trigger.<br>
-Desktop: click a block. Drag the mouse to look around.
+Thumbstick: move held block closer/further.<br>
+Release trigger: throw toward pointer.<br>
+Desktop: click a block.
 </div>
-<button id="vr">ENTER VR</button><div id="msg">Find a block</div>
+
+<button id="vr">ENTER VR</button>
+<div id="msg">Find a block</div>
 
 <script type="module">
+
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 import {VRButton} from "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/webxr/VRButton.js";
 
+
+/* =========================
+   SCENE
+========================= */
+
 const scene=new THREE.Scene();
+
 scene.background=new THREE.Color(0x151c27);
 scene.fog=new THREE.Fog(0x151c27,8,20);
 
-const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.05,60);
+const camera=new THREE.PerspectiveCamera(
+ 70,
+ innerWidth/innerHeight,
+ .05,
+ 60
+);
+
 camera.position.set(0,1.65,4);
 
-const renderer=new THREE.WebGLRenderer({antialias:true});
+
+const renderer=new THREE.WebGLRenderer({
+ antialias:true
+});
+
 renderer.setSize(innerWidth,innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+
 renderer.xr.enabled=true;
+
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
 document.body.appendChild(renderer.domElement);
 
-const realVR=VRButton.createButton(renderer);
-realVR.style.display="none";
-document.body.appendChild(realVR);
-document.querySelector("#vr").onclick=()=>realVR.click();
 
-scene.add(new THREE.HemisphereLight(0xbfd8ff,0x26303b,1.8));
-const sun=new THREE.DirectionalLight(0xffffff,3.2);
-sun.position.set(2,6,3); sun.castShadow=true;
-sun.shadow.mapSize.set(1024,1024); scene.add(sun);
+/* =========================
+   VR BUTTON
+========================= */
+
+const realVR=VRButton.createButton(renderer);
+
+realVR.style.display="none";
+
+document.body.appendChild(realVR);
+
+document.querySelector("#vr").onclick=()=>{
+ realVR.click();
+};
+
+
+/* =========================
+   LIGHTING
+========================= */
+
+scene.add(
+ new THREE.HemisphereLight(
+  0xbfd8ff,
+  0x26303b,
+  1.8
+ )
+);
+
+const sun=new THREE.DirectionalLight(
+  0xffffff,
+  3.2
+);
+
+sun.position.set(2,6,3);
+sun.castShadow=true;
+
+sun.shadow.mapSize.set(1024,1024);
+
+scene.add(sun);
+
+
+/* =========================
+   FLOOR
+========================= */
 
 const floor=new THREE.Mesh(
  new THREE.BoxGeometry(8,.2,8),
- new THREE.MeshStandardMaterial({color:0x555e68,roughness:.9})
+ new THREE.MeshStandardMaterial({
+  color:0x555e68,
+  roughness:.9
+ })
 );
-floor.position.y=-.1; floor.receiveShadow=true; scene.add(floor);
+
+floor.position.y=-.1;
+
+floor.receiveShadow=true;
+
+scene.add(floor);
+
+
+/* =========================
+   WALLS
+========================= */
 
 function makeWall(x,y,z,sx,sy,sz){
- const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),
- new THREE.MeshStandardMaterial({color:0x2d3540,roughness:.8}));
- m.position.set(x,y,z);m.receiveShadow=true;scene.add(m);
+
+ const m=new THREE.Mesh(
+  new THREE.BoxGeometry(sx,sy,sz),
+  new THREE.MeshStandardMaterial({
+   color:0x2d3540,
+   roughness:.8
+  })
+ );
+
+ m.position.set(x,y,z);
+
+ m.receiveShadow=true;
+
+ scene.add(m);
 }
-makeWall(0,2,-4,8,4,.2); makeWall(-4,2,0,.2,4,8); makeWall(4,2,0,.2,4,8);
+
+makeWall(0,2,-4,8,4,.2);
+makeWall(-4,2,0,.2,4,8);
+makeWall(4,2,0,.2,4,8);
+
+
+/* =========================
+   BLOCKS
+========================= */
 
 const blocks=[];
-const colors=[0xe95f5f,0x5b9be8,0x63c777,0xe7b94f,0xb46be8,0x4fc7c7];
+
+const colors=[
+ 0xe95f5f,
+ 0x5b9be8,
+ 0x63c777,
+ 0xe7b94f,
+ 0xb46be8,
+ 0x4fc7c7
+];
+
+const BLOCK_SIZE=.55;
+const HALF=.275;
 
 function block(i,x,y,z){
+
  const b=new THREE.Mesh(
-  new THREE.BoxGeometry(.55,.55,.55),
-  new THREE.MeshStandardMaterial({color:colors[i%colors.length],roughness:.6,metalness:.05})
+
+  new THREE.BoxGeometry(
+   BLOCK_SIZE,
+   BLOCK_SIZE,
+   BLOCK_SIZE
+  ),
+
+  new THREE.MeshStandardMaterial({
+   color:colors[i%colors.length],
+   roughness:.6,
+   metalness:.05
+  })
+
  );
- b.position.set(x,y,z);b.castShadow=true;b.receiveShadow=true;
+
+ b.position.set(x,y,z);
+
+ b.castShadow=true;
+ b.receiveShadow=true;
+
  b.userData.vel=new THREE.Vector3();
+
  b.userData.held=false;
- scene.add(b);blocks.push(b);
-}
-[[-1.5,.28,-1.2],[-.75,.28,-1.2],[0,.28,-1.2],[.75,.28,-1.2],[1.5,.28,-1.2],
- [-.75,.83,-1.2],[0,.83,-1.2]].forEach((p,i)=>block(i,...p));
 
-const raycaster=new THREE.Raycaster();
-const tempQ=new THREE.Quaternion();
-const tempV=new THREE.Vector3();
-let held=null,heldController=null;
+ scene.add(b);
 
-function grab(b,controller=null){
- if(held){held.userData.held=false;held=null;heldController=null}
- held=b;b.userData.held=true;heldController=controller;
- document.querySelector("#msg").textContent="Block picked up — press again to release";
+ blocks.push(b);
 }
 
-function release(){
- if(!held)return;
- held.userData.held=false;
- if(heldController){
-  tempV.set(0,0,-1).applyQuaternion(heldController.getWorldQuaternion(tempQ)).multiplyScalar(3);
-  held.userData.vel.copy(tempV);
- } else {
-  tempV.set(0,0,-1).applyQuaternion(camera.quaternion).multiplyScalar(2);
-  held.userData.vel.copy(tempV);
- }
- held=null;heldController=null;
- document.querySelector("#msg").textContent="Block released";
-}
 
-addEventListener("pointerdown",e=>{
- const mouse=new THREE.Vector2(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight)*2+1);
- raycaster.setFromCamera(mouse,camera);
- const hit=raycaster.intersectObjects(blocks)[0];
- if(hit) held===hit.object?release():grab(hit.object);
+/* starting blocks */
+
+[
+ [-1.5,.28,-1.2],
+ [-.75,.28,-1.2],
+ [0,.28,-1.2],
+ [.75,.28,-1.2],
+ [1.5,.28,-1.2],
+ [-.75,.83,-1.2],
+ [0,.83,-1.2]
+].forEach((p,i)=>{
+
+ block(
+  i,
+  p[0],
+  p[1],
+  p[2]
+ );
+
 });
+
+
+/* =========================
+   POINTER
+========================= */
+
+const pointerMaterial=new THREE.MeshBasicMaterial({
+ color:0x00ffff
+});
+
+const pointerGeometry=new THREE.BufferGeometry();
+
+pointerGeometry.setFromPoints([
+ new THREE.Vector3(0,0,0),
+ new THREE.Vector3(0,0,-5)
+]);
+
+function makePointer(){
+
+ const line=new THREE.Line(
+  pointerGeometry,
+  pointerMaterial
+ );
+
+ line.visible=false;
+
+ return line;
+}
+
+
+/* =========================
+   VR HAND
+========================= */
+
+function makeVirtualHand(){
+
+ const hand=new THREE.Group();
+
+ /*
+    Palm
+ */
+
+ const palm=new THREE.Mesh(
+  new THREE.BoxGeometry(.16,.12,.18),
+  new THREE.MeshStandardMaterial({
+   color:0xd8a27c,
+   roughness:.8
+  })
+ );
+
+ palm.position.z=.02;
+
+ hand.add(palm);
+
+
+ /*
+    Fingers
+ */
+
+ for(let i=0;i<4;i++){
+
+  const finger=new THREE.Mesh(
+   new THREE.BoxGeometry(.035,.035,.12),
+   new THREE.MeshStandardMaterial({
+    color:0xe0aa82
+   })
+  );
+
+  finger.position.set(
+   -.06+i*.04,
+   -.01,
+   -.08
+  );
+
+  hand.add(finger);
+ }
+
+
+ /*
+    Thumb
+ */
+
+ const thumb=new THREE.Mesh(
+  new THREE.BoxGeometry(.04,.04,.11),
+  new THREE.MeshStandardMaterial({
+   color:0xe0aa82
+  })
+ );
+
+ thumb.rotation.y=-.6;
+
+ thumb.position.set(
+  -.095,
+  -.015,
+  -.02
+ );
+
+ hand.add(thumb);
+
+
+ hand.scale.setScalar(1.4);
+
+ return hand;
+}
+
+
+/* =========================
+   CONTROLLERS
+========================= */
 
 const controllers=[];
+
+let held=null;
+let heldController=null;
+
+let holdDistance=1.15;
+
+const raycaster=new THREE.Raycaster();
+
+const tempQ=new THREE.Quaternion();
+const tempV=new THREE.Vector3();
+const tempOrigin=new THREE.Vector3();
+const tempDir=new THREE.Vector3();
+
+
 for(let i=0;i<2;i++){
+
  const c=renderer.xr.getController(i);
- c.addEventListener("selectstart",()=>{
-  const origin=new THREE.Vector3().setFromMatrixPosition(c.matrixWorld);
-  const q=c.getWorldQuaternion(tempQ);
-  const dir=new THREE.Vector3(0,0,-1).applyQuaternion(q);
-  raycaster.set(origin,dir);
-  const hit=raycaster.intersectObjects(blocks)[0];
-  if(hit && hit.distance<5) held===hit.object?release():grab(hit.object,c);
- });
- scene.add(c);controllers.push(c);
+
+ /*
+    Pointer
+ */
+
+ const pointer=makePointer();
+
+ c.add(pointer);
+
+ c.userData.pointer=pointer;
+
+
+ /*
+    Virtual hand
+ */
+
+ const hand=makeVirtualHand();
+
+ hand.position.set(0,0,-.12);
+
+ c.add(hand);
+
+ c.userData.hand=hand;
+
+
+ /*
+    Trigger pressed
+ */
+
+ c.addEventListener(
+  "selectstart",
+  ()=>{
+   controllerGrab(c);
+  }
+ );
+
+
+ /*
+    Trigger released
+ */
+
+ c.addEventListener(
+  "selectend",
+  ()=>{
+   controllerRelease(c);
+  }
+ );
+
+
+ scene.add(c);
+
+ controllers.push(c);
 }
 
-let mouseLook=false,lastX=0,lastY=0;
-addEventListener("pointermove",e=>{
- if(!mouseLook || renderer.xr.isPresenting)return;
- const dx=e.clientX-lastX,dy=e.clientY-lastY;
- camera.rotation.order="YXZ";
- camera.rotation.y-=dx*.003;
- camera.rotation.x=Math.max(-1.45,Math.min(1.45,camera.rotation.x-dy*.003));
- lastX=e.clientX;lastY=e.clientY;
-});
-addEventListener("pointerdown",e=>{if(!renderer.xr.isPresenting){mouseLook=true;lastX=e.clientX;lastY=e.clientY}});
-addEventListener("pointerup",()=>mouseLook=false);
 
-const clock=new THREE.Clock();
-function animate(){
- const dt=Math.min(clock.getDelta(),.033);
+/* =========================
+   FIND AIM RAY
+========================= */
+
+function getControllerRay(c){
+
+ tempOrigin.setFromMatrixPosition(
+  c.matrixWorld
+ );
+
+ tempDir.set(
+  0,
+  0,
+  -1
+ );
+
+ tempDir.applyQuaternion(
+  c.getWorldQuaternion(tempQ)
+ );
+
+ return {
+  origin:tempOrigin.clone(),
+  direction:tempDir.clone()
+ };
+}
+
+
+/* =========================
+   CONTROLLER GRAB
+========================= */
+
+function controllerGrab(c){
+
+ const ray=getControllerRay(c);
+
+ raycaster.set(
+  ray.origin,
+  ray.direction
+ );
+
+ const hit=raycaster.intersectObjects(
+  blocks,
+  false
+ )[0];
+
+ if(!hit || hit.distance>5)return;
 
  if(held){
-  if(renderer.xr.isPresenting && heldController){
-   const origin=new THREE.Vector3().setFromMatrixPosition(heldController.matrixWorld);
-   const dir=new THREE.Vector3(0,0,-1).applyQuaternion(heldController.getWorldQuaternion(tempQ));
-   held.position.copy(origin).addScaledVector(dir,1.15);
-   held.userData.vel.set(0,0,0);
+
+  if(held===hit.object){
+
+   controllerRelease(c);
+
+  }
+
+  return;
+ }
+
+ held=hit.object;
+
+ heldController=c;
+
+ held.userData.held=true;
+
+ /*
+    Start at the distance where
+    the player grabbed it.
+ */
+
+ holdDistance=Math.max(
+  .8,
+  Math.min(3.5,hit.distance)
+ );
+
+ document.querySelector("#msg").textContent=
+  "Holding block — move the stick to move it";
+
+
+ c.userData.hand.scale.setScalar(1.55);
+}
+
+
+/* =========================
+   CONTROLLER RELEASE
+========================= */
+
+function controllerRelease(c){
+
+ if(!held || heldController!==c)return;
+
+ /*
+    Throw in the direction
+    the pointer is aiming.
+ */
+
+ const ray=getControllerRay(c);
+
+ held.userData.held=false;
+
+ held.userData.vel
+  .copy(ray.direction)
+  .multiplyScalar(5);
+
+ held=null;
+ heldController=null;
+
+ c.userData.hand.scale.setScalar(1.4);
+
+ document.querySelector("#msg").textContent=
+  "Block thrown!";
+}
+
+
+/* =========================
+   UPDATE POINTER
+========================= */
+
+function updatePointers(){
+
+ for(const c of controllers){
+
+  const pointer=c.userData.pointer;
+
+  if(!renderer.xr.isPresenting){
+
+   pointer.visible=false;
+
+   continue;
+  }
+
+  pointer.visible=true;
+
+  const ray=getControllerRay(c);
+
+  const length=heldController===c
+   ? holdDistance
+   : 5;
+
+  const points=[
+   new THREE.Vector3(0,0,0),
+   new THREE.Vector3(0,0,-length)
+  ];
+
+  pointer.geometry.setFromPoints(points);
+
+  /*
+     Make pointer change slightly
+     when aiming at a block.
+  */
+
+  raycaster.set(
+   ray.origin,
+   ray.direction
+  );
+
+  const hit=raycaster.intersectObjects(
+   blocks,
+   false
+  )[0];
+
+  if(hit && hit.distance<5){
+
+   pointer.material.color.setHex(
+    0x00ff66
+   );
+
   }else{
-   const dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
-   held.position.copy(camera.position).addScaledVector(dir,1.2);
-   held.userData.vel.set(0,0,0);
+
+   pointer.material.color.setHex(
+    0x00ffff
+   );
+
+  }
+ }
+}
+
+
+/* =========================
+   THUMBSTICK
+========================= */
+
+function updateJoystick(){
+
+ if(!held || !heldController)return;
+
+ const session=renderer.xr.getSession();
+
+ if(!session)return;
+
+ const source=session.inputSources.find(
+  s=>s.targetRayMode==="tracked-pointer" &&
+  s.gamepad &&
+  (
+   s.handedness===
+   heldController.userData.handedness
+   ||
+   s.handedness==="none"
+  )
+ );
+
+ /*
+    Better fallback:
+    find the input source whose
+    controller matches.
+ */
+
+ let gamepad=null;
+
+ for(const source of session.inputSources){
+
+  if(source.gamepad){
+
+   if(
+    source.handedness==="left" &&
+    controllers[0]===heldController
+   ){
+    gamepad=source.gamepad;
+   }
+
+   if(
+    source.handedness==="right" &&
+    controllers[1]===heldController
+   ){
+    gamepad=source.gamepad;
+   }
   }
  }
 
- for(const b of blocks){
-  if(b.userData.held)continue;
-  const v=b.userData.vel;
-  v.y-=7*dt;
-  b.position.addScaledVector(v,dt);
-  const half=.275;
-  if(b.position.y<half){b.position.y=half;v.y*=-.25;v.x*=.92;v.z*=.92}
-  if(b.position.x<-3.7||b.position.x>3.7)v.x*=-.4;
-  if(b.position.z<-3.7||b.position.z>3.7)v.z*=-.4;
- }
- renderer.render(scene,camera);
-}
-renderer.setAnimationLoop(animate);
+ if(!gamepad)return;
 
-addEventListener("resize",()=>{
- camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
- renderer.setSize(innerWidth,innerHeight);
-});
+ const axes=gamepad.axes;
+
+ if(!axes || axes.length<2)return;
+
+ /*
+    Vertical stick axis.
+
+    Push forward = block further away.
+    Pull backward = block closer.
+ */
+
+ const stick=axes[3] ?? axes[1] ?? 0;
+
+ if(Math.abs(stick)>.12){
+
+  holdDistance+=stick*.035;
+
+  holdDistance=
+   THREE.MathUtils.clamp(
+    holdDistance,
+    .7,
+    4
+   );
+ }
+}
+
+
+/* =========================
+   MOVE HELD BLOCK
+========================= */
+
+function updateHeldBlock(){
+
+ if(!held || !heldController)return;
+
+ const ray=getControllerRay(
+  heldController
+ );
+
+ held.position.copy(
+  ray.origin
+ );
+
+ held.position.addScaledVector(
+  ray.direction,
+  holdDistance
+ );
+
+ held.userData.vel.set(0,0,0);
+}
+
+
+/* =========================
+   BLOCK COLLISIONS
+========================= */
+
+function blockCollisions(){
+
+ for(let i=0;i<blocks.length;i++){
+
+  const a=blocks[i];
+
+  if(a.userData.held)continue;
+
+  for(let j=i+1;j<blocks.length;j++){
+
+   const b=blocks[j];
+
+   if(b.userData.held)continue;
+
+   const dx=b.position.x-a.position.x;
+   const dy=b.position.y-a.position.y;
+   const dz=b.position.z-a.position.z;
+
+   const overlapX=
+    BLOCK_SIZE-Math.abs(dx);
+
+   const overlapY=
+    BLOCK_SIZE-Math.abs(dy);
+
+   const overlapZ=
+    BLOCK_SIZE-Math.abs(dz);
+
+   if(
+    overlapX>0 &&
+    overlapY>0 &&
+    overlapZ>0
+   ){
+
+    /*
+       Push them apart using the
+       smallest overlap axis.
+    */
+
+    if(
+     overlapX<=overlapY &&
+     overlapX<=overlapZ
+    ){
+
+     const push=overlapX/2;
+
+     const sign=dx>=0?1:-1;
+
+     a.position.x-=push*sign;
+     b.position.x+=push*sign;
+
+     const av=a.userData.vel.x;
+     a.userData.vel.x=b.userData.vel.x*.5;
+     b.userData.vel.x=av*.5;
+
+    }else if(
+     overlapY<=overlapX &&
+     overlapY<=overlapZ
+    ){
+
+     const push=overlapY/2;
+
+     const sign=dy>=0?1:-1;
+
+     a.position.y-=push*sign;
+     b.position.y+=push*sign;
+
+     const av=a.userData.vel.y;
+     a.userData.vel.y=b.userData.vel.y*.5;
+     b.userData.vel.y=av*.5;
+
+    }else{
+
+     const push=overlapZ/2;
+
+     const sign=dz>=0?1:-1;
+
+     a.position.z-=push*sign;
+     b.position.z+=push*sign;
+
+     const av=a.userData.vel.z;
+     a.userData.vel.z=b.userData.vel.z*.5;
+     b.userData.vel.z=av*.5;
+    }
+   }
+  }
+ }
+}
+
+
+/* =========================
+   PHYSICS
+========================= */
+
+function updatePhysics(dt){
+
+ for(const b of blocks){
+
+  if(b.userData.held)continue;
+
+  const v=b.userData.vel;
+
+  /*
+     Gravity
+  */
+
+  v.y-=7*dt;
+
+  b.position.addScaledVector(
+   v,
+   dt
+  );
+
+  /*
+     Floor
+  */
+
+  if(b.position.y<HALF){
+
+   b.position.y=HALF;
+
+   if(v.y<0)
+    v.y*=-.25;
+
+   v.x*=.92;
+   v.z*=.92;
+  }
+
+  /*
+     Walls
+  */
+
+  if(b.position.x<-3.7){
+
+   b.position.x=-3.7;
+   v.x*=-.4;
+
+  }
+
+  if(b.position.x>3.7){
+
+   b.position.x=3.7;
+   v.x*=-.4;
+
+  }
+
+  if(b.position.z<-3.7){
+
+   b.position.z=-3.7;
+   v.z*=-.4;
+
+  }
+
+  if(b.position.z>3.7){
+
+   b.position.z=3.7;
+   v.z*=-.4;
+
+  }
+ }
+
+ /*
+    Block vs block
+ */
+
+ blockCollisions();
+}
+
+
+/* =========================
+   DESKTOP
+========================= */
+
+const mouseRay=new THREE.Raycaster();
+
+addEventListener(
+ "pointerdown",
+ e=>{
+
+  if(renderer.xr.isPresenting)return;
+
+  const mouse=new THREE.Vector2(
+   e.clientX/innerWidth*2-1,
+   -(e.clientY/innerHeight)*2+1
+  );
+
+  mouseRay.setFromCamera(
+   mouse,
+   camera
+  );
+
+  const hit=
+   mouseRay.intersectObjects(
+    blocks
+   )[0];
+
+  if(hit){
+
+   if(held===hit.object){
+
+    releaseDesktop();
+
+   }else{
+
+    held=hit.object;
+    heldController=null;
+    held.userData.held=true;
+
+    document.querySelector("#msg").textContent=
+     "Block picked up — click again to throw";
+   }
+  }
+ }
+);
+
+
+/* =========================
+   DESKTOP RELEASE
+========================= */
+
+function releaseDesktop(){
+
+ if(!held)return;
+
+ const dir=new THREE.Vector3(
+  0,
+  0,
+  -1
+ );
+
+ dir.applyQuaternion(
+  camera.quaternion
+ );
+
+ held.userData.held=false;
+
+ held.userData.vel.copy(
+  dir.multiplyScalar(3)
+ );
+
+ held=null;
+
+ document.querySelector("#msg").textContent=
+  "Block thrown";
+}
+
+
+/* =========================
+   MOUSE LOOK
+========================= */
+
+let mouseLook=false;
+let lastX=0;
+let lastY=0;
+
+addEventListener(
+ "pointermove",
+ e=>{
+
+  if(
+   !mouseLook ||
+   renderer.xr.isPresenting
+  )return;
+
+  const dx=e.clientX-lastX;
+  const dy=e.clientY-lastY;
+
+  camera.rotation.order="YXZ";
+
+  camera.rotation.y-=dx*.003;
+
+  camera.rotation.x=
+   Math.max(
+    -1.45,
+    Math.min(
+     1.45,
+     camera.rotation.x-dy*.003
+    )
+   );
+
+  lastX=e.clientX;
+  lastY=e.clientY;
+ }
+);
+
+addEventListener(
+ "pointerdown",
+ e=>{
+
+  if(!renderer.xr.isPresenting){
+
+   mouseLook=true;
+
+   lastX=e.clientX;
+   lastY=e.clientY;
+  }
+ }
+);
+
+addEventListener(
+ "pointerup",
+ ()=>{
+  mouseLook=false;
+ }
+);
+
+
+/* =========================
+   ANIMATION
+========================= */
+
+const clock=new THREE.Clock();
+
+function animate(){
+
+ const dt=Math.min(
+  clock.getDelta(),
+  .033
+ );
+
+ updatePointers();
+
+ if(renderer.xr.isPresenting){
+
+  updateJoystick();
+  updateHeldBlock();
+
+ }else if(held){
+
+  /*
+     Desktop held block
+  */
+
+  const dir=new THREE.Vector3(
+   0,
+   0,
+   -1
+  ).applyQuaternion(
+   camera.quaternion
+  );
+
+  held.position.copy(camera.position)
+   .addScaledVector(dir,1.2);
+
+  held.userData.vel.set(0,0,0);
+ }
+
+ updatePhysics(dt);
+
+ renderer.render(
+  scene,
+  camera
+ );
+}
+
+
+renderer.setAnimationLoop(
+ animate
+);
+
+
+/* =========================
+   RESIZE
+========================= */
+
+addEventListener(
+ "resize",
+ ()=>{
+
+  camera.aspect=
+   innerWidth/innerHeight;
+
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(
+   innerWidth,
+   innerHeight
+  );
+ }
+);
+
 </script>
 </body>
 </html>
