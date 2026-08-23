@@ -2,51 +2,52 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Mini VR Block Room v2</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mini VR Block Room V1</title>
 
 <style>
 html,body{
   margin:0;
+  width:100%;
   height:100%;
   overflow:hidden;
   background:#10141b;
-  font-family:system-ui,Arial
+  font-family:Arial,sans-serif;
 }
 
 #hud{
   position:fixed;
-  z-index:5;
-  left:12px;
+  z-index:10;
   top:12px;
-  color:#fff;
-  background:#0009;
-  padding:10px 12px;
+  left:12px;
+  color:white;
+  background:#000b;
+  padding:12px;
   border-radius:10px;
-  line-height:1.35
+  line-height:1.4;
 }
 
 #vr{
   position:fixed;
-  z-index:6;
-  right:12px;
+  z-index:10;
   top:12px;
+  right:12px;
+  padding:12px 16px;
   border:0;
   border-radius:10px;
-  padding:12px 16px;
-  font-weight:700
+  font-weight:bold;
 }
 
 #msg{
   position:fixed;
-  z-index:5;
-  left:50%;
+  z-index:10;
   bottom:20px;
+  left:50%;
   transform:translateX(-50%);
   color:white;
-  background:#0009;
-  padding:8px 12px;
-  border-radius:999px
+  background:#000b;
+  padding:8px 14px;
+  border-radius:20px;
 }
 </style>
 </head>
@@ -54,20 +55,22 @@ html,body{
 <body>
 
 <div id="hud">
-<b>Mini VR Block Room</b><br>
-VR: point at a block and press trigger.<br>
-Desktop: click a block. Drag the mouse to look around.
+  <b>Mini VR Block Room V1</b><br>
+  VR: put your small hand near a block<br>
+  Hold GRIP to pick it up<br>
+  Release GRIP to drop it
 </div>
 
 <button id="vr">ENTER VR</button>
-<div id="msg">Find a block</div>
+
+<div id="msg">Ready</div>
 
 <script type="module">
 
 import * as THREE from
 "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
-import {VRButton} from
+import { VRButton } from
 "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/webxr/VRButton.js";
 
 
@@ -75,18 +78,10 @@ import {VRButton} from
    SCENE
 ========================= */
 
-const scene =
-new THREE.Scene();
+const scene = new THREE.Scene();
 
 scene.background =
-new THREE.Color(0x151c27);
-
-scene.fog =
-new THREE.Fog(
-  0x151c27,
-  8,
-  20
-);
+  new THREE.Color(0x151c27);
 
 
 /* =========================
@@ -94,12 +89,12 @@ new THREE.Fog(
 ========================= */
 
 const camera =
-new THREE.PerspectiveCamera(
-  70,
-  innerWidth / innerHeight,
-  .05,
-  60
-);
+  new THREE.PerspectiveCamera(
+    70,
+    innerWidth / innerHeight,
+    0.05,
+    60
+  );
 
 camera.position.set(
   0,
@@ -113,9 +108,9 @@ camera.position.set(
 ========================= */
 
 const renderer =
-new THREE.WebGLRenderer({
-  antialias:true
-});
+  new THREE.WebGLRenderer({
+    antialias:true
+  });
 
 renderer.setSize(
   innerWidth,
@@ -123,15 +118,15 @@ renderer.setSize(
 );
 
 renderer.setPixelRatio(
-  Math.min(devicePixelRatio,2)
+  Math.min(
+    window.devicePixelRatio || 1,
+    2
+  )
 );
 
 renderer.xr.enabled = true;
 
 renderer.shadowMap.enabled = true;
-
-renderer.shadowMap.type =
-THREE.PCFSoftShadowMap;
 
 document.body.appendChild(
   renderer.domElement
@@ -143,38 +138,42 @@ document.body.appendChild(
 ========================= */
 
 const realVR =
-VRButton.createButton(
-  renderer
-);
+  VRButton.createButton(
+    renderer
+  );
 
 realVR.style.display =
-"none";
+  "none";
 
 document.body.appendChild(
   realVR
 );
 
-document.querySelector("#vr").onclick =
-() => realVR.click();
+document.getElementById("vr").onclick =
+  function(){
+    realVR.click();
+  };
 
 
 /* =========================
-   LIGHT
+   LIGHTING
 ========================= */
 
-scene.add(
+const hemi =
   new THREE.HemisphereLight(
-    0xbfd8ff,
-    0x26303b,
-    1.8
-  )
-);
+    0xffffff,
+    0x333333,
+    2
+  );
+
+scene.add(hemi);
+
 
 const sun =
-new THREE.DirectionalLight(
-  0xffffff,
-  3.2
-);
+  new THREE.DirectionalLight(
+    0xffffff,
+    3
+  );
 
 sun.position.set(
   2,
@@ -184,11 +183,6 @@ sun.position.set(
 
 sun.castShadow = true;
 
-sun.shadow.mapSize.set(
-  1024,
-  1024
-);
-
 scene.add(sun);
 
 
@@ -197,19 +191,19 @@ scene.add(sun);
 ========================= */
 
 const floor =
-new THREE.Mesh(
-  new THREE.BoxGeometry(
-    8,
-    .2,
-    8
-  ),
-  new THREE.MeshStandardMaterial({
-    color:0x555e68,
-    roughness:.9
-  })
-);
+  new THREE.Mesh(
+    new THREE.BoxGeometry(
+      8,
+      0.2,
+      8
+    ),
+    new THREE.MeshStandardMaterial({
+      color:0x555e68,
+      roughness:0.9
+    })
+  );
 
-floor.position.y = -.1;
+floor.position.y = -0.1;
 
 floor.receiveShadow = true;
 
@@ -221,51 +215,43 @@ scene.add(floor);
 ========================= */
 
 function makeWall(
-  x,
-  y,
-  z,
-  sx,
-  sy,
-  sz
+  x,y,z,
+  sx,sy,sz
 ){
 
-  const m =
-  new THREE.Mesh(
-    new THREE.BoxGeometry(
-      sx,
-      sy,
-      sz
-    ),
-    new THREE.MeshStandardMaterial({
-      color:0x2d3540,
-      roughness:.8
-    })
+  const wall =
+    new THREE.Mesh(
+      new THREE.BoxGeometry(
+        sx,sy,sz
+      ),
+      new THREE.MeshStandardMaterial({
+        color:0x303844,
+        roughness:0.8
+      })
+    );
+
+  wall.position.set(
+    x,y,z
   );
 
-  m.position.set(
-    x,
-    y,
-    z
-  );
+  wall.receiveShadow = true;
 
-  m.receiveShadow = true;
-
-  scene.add(m);
+  scene.add(wall);
 }
 
 makeWall(
   0,2,-4,
-  8,4,.2
+  8,4,0.2
 );
 
 makeWall(
   -4,2,0,
-  .2,4,8
+  0.2,4,8
 );
 
 makeWall(
   4,2,0,
-  .2,4,8
+  0.2,4,8
 );
 
 
@@ -285,275 +271,113 @@ const colors = [
 ];
 
 
-function block(
-  i,
-  x,
-  y,
-  z
+function makeBlock(
+  index,
+  x,y,z
 ){
 
-  const b =
-  new THREE.Mesh(
-    new THREE.BoxGeometry(
-      .55,
-      .55,
-      .55
-    ),
-    new THREE.MeshStandardMaterial({
-      color:
-        colors[
-          i % colors.length
-        ],
-      roughness:.6,
-      metalness:.05
-    })
+  const block =
+    new THREE.Mesh(
+      new THREE.BoxGeometry(
+        0.55,
+        0.55,
+        0.55
+      ),
+      new THREE.MeshStandardMaterial({
+        color:
+          colors[
+            index % colors.length
+          ],
+        roughness:0.6
+      })
+    );
+
+  block.position.set(
+    x,y,z
   );
 
-  b.position.set(
-    x,
-    y,
-    z
-  );
+  block.castShadow = true;
 
-  b.castShadow = true;
+  block.receiveShadow = true;
 
-  b.receiveShadow = true;
+  block.userData.held = false;
 
-  b.userData.vel =
-  new THREE.Vector3();
+  scene.add(block);
 
-  b.userData.held =
-  false;
-
-  scene.add(b);
-
-  blocks.push(b);
+  blocks.push(block);
 }
 
 
-[
-  [-1.5,.28,-1.2],
-  [-.75,.28,-1.2],
-  [0,.28,-1.2],
-  [.75,.28,-1.2],
-  [1.5,.28,-1.2],
-  [-.75,.83,-1.2],
-  [0,.83,-1.2]
-].forEach(
-  (p,i) =>
-    block(
+const positions = [
+  [-1.5,0.275,-1.2],
+  [-0.75,0.275,-1.2],
+  [0,0.275,-1.2],
+  [0.75,0.275,-1.2],
+  [1.5,0.275,-1.2],
+  [-0.75,0.825,-1.2],
+  [0,0.825,-1.2]
+];
+
+
+positions.forEach(
+  (p,i) => {
+    makeBlock(
       i,
-      ...p
-    )
-);
-
-
-/* =========================
-   RAYCASTING
-========================= */
-
-const raycaster =
-new THREE.Raycaster();
-
-const tempQ =
-new THREE.Quaternion();
-
-const tempV =
-new THREE.Vector3();
-
-
-/* =========================
-   HELD BLOCK
-========================= */
-
-let held = null;
-
-let heldController = null;
-
-
-/* =========================
-   GRAB
-========================= */
-
-function grab(
-  b,
-  controller = null
-){
-
-  if(held){
-
-    held.userData.held =
-    false;
-
-    held = null;
-
-    heldController =
-    null;
-  }
-
-  held = b;
-
-  b.userData.held =
-  true;
-
-  heldController =
-  controller;
-
-  document.querySelector(
-    "#msg"
-  ).textContent =
-  "Block picked up — press again to release";
-}
-
-
-/* =========================
-   RELEASE
-========================= */
-
-function release(){
-
-  if(!held)
-    return;
-
-
-  held.userData.held =
-  false;
-
-
-  if(heldController){
-
-    tempV.set(
-      0,
-      0,
-      -1
+      p[0],
+      p[1],
+      p[2]
     );
-
-    tempV.applyQuaternion(
-      heldController.getWorldQuaternion(
-        tempQ
-      )
-    );
-
-    tempV.multiplyScalar(3);
-
-    held.userData.vel.copy(
-      tempV
-    );
-
-  }else{
-
-    tempV.set(
-      0,
-      0,
-      -1
-    );
-
-    tempV.applyQuaternion(
-      camera.quaternion
-    );
-
-    tempV.multiplyScalar(2);
-
-    held.userData.vel.copy(
-      tempV
-    );
-  }
-
-
-  held = null;
-
-  heldController =
-  null;
-
-
-  document.querySelector(
-    "#msg"
-  ).textContent =
-  "Block released";
-}
-
-
-/* =========================
-   DESKTOP CLICK
-========================= */
-
-addEventListener(
-  "pointerdown",
-  e => {
-
-    const mouse =
-    new THREE.Vector2(
-      e.clientX /
-        innerWidth * 2 - 1,
-
-      -(e.clientY /
-        innerHeight) * 2 + 1
-    );
-
-
-    raycaster.setFromCamera(
-      mouse,
-      camera
-    );
-
-
-    const hit =
-    raycaster.intersectObjects(
-      blocks
-    )[0];
-
-
-    if(hit){
-
-      held === hit.object
-        ? release()
-        : grab(hit.object);
-    }
   }
 );
 
 
 /* =========================
-   SMALL VR HAND
+   SMALL HAND
 ========================= */
 
 function makeSmallHand(){
 
   const hand =
-  new THREE.Group();
+    new THREE.Group();
+
 
   /*
-    Small size:
-    approximately 55% of
-    the controller visual.
+    SMALL HAND
+    This is intentionally
+    much smaller than the
+    previous version.
   */
 
   hand.scale.set(
-    .55,
-    .55,
-    .55
+    0.35,
+    0.35,
+    0.35
   );
 
 
-  const material =
-  new THREE.MeshStandardMaterial({
-    color:0xd69a78,
-    roughness:.8
-  });
+  const skin =
+    new THREE.MeshStandardMaterial({
+      color:0xd69a78,
+      roughness:0.8
+    });
 
+
+  /* Palm */
 
   const palm =
-  new THREE.Mesh(
-    new THREE.BoxGeometry(
-      .18,
-      .12,
-      .20
-    ),
-    material
-  );
+    new THREE.Mesh(
+      new THREE.BoxGeometry(
+        0.22,
+        0.14,
+        0.25
+      ),
+      skin
+    );
 
   hand.add(palm);
 
+
+  /* Four fingers */
 
   for(
     let i=0;
@@ -562,48 +386,50 @@ function makeSmallHand(){
   ){
 
     const finger =
-    new THREE.Mesh(
-      new THREE.CapsuleGeometry(
-        .018,
-        .075,
-        4,
-        8
-      ),
-      material
-    );
+      new THREE.Mesh(
+        new THREE.CapsuleGeometry(
+          0.025,
+          0.12,
+          4,
+          8
+        ),
+        skin
+      );
 
     finger.position.set(
-      -.055 + i*.037,
+      -0.075 + i * 0.05,
       0,
-      -.13
+      -0.17
     );
 
     finger.rotation.x =
-      Math.PI/2;
+      Math.PI / 2;
 
     hand.add(finger);
   }
 
 
+  /* Thumb */
+
   const thumb =
-  new THREE.Mesh(
-    new THREE.CapsuleGeometry(
-      .018,
-      .07,
-      4,
-      8
-    ),
-    material
-  );
+    new THREE.Mesh(
+      new THREE.CapsuleGeometry(
+        0.025,
+        0.11,
+        4,
+        8
+      ),
+      skin
+    );
 
   thumb.position.set(
-    -.095,
-    -.01,
-    -.04
+    -0.12,
+    -0.01,
+    -0.06
   );
 
   thumb.rotation.z =
-  -.7;
+    -0.7;
 
   hand.add(thumb);
 
@@ -613,10 +439,14 @@ function makeSmallHand(){
 
 
 /* =========================
-   VR CONTROLLERS
+   CONTROLLERS
 ========================= */
 
 const controllers = [];
+
+let heldBlock = null;
+
+let heldController = null;
 
 
 for(
@@ -625,342 +455,221 @@ for(
   i++
 ){
 
-  const c =
-  renderer.xr.getController(i);
+  const controller =
+    renderer.xr.getController(i);
 
-
-  /*
-    Small visual hand.
-  */
 
   const hand =
-  makeSmallHand();
+    makeSmallHand();
+
+
+  controller.add(hand);
+
+
+  controller.userData.hand =
+    hand;
 
 
   /*
-    Hide it initially.
-    It becomes visible in VR.
+    GRIP START
   */
 
-  hand.visible = true;
+  controller.addEventListener(
+    "squeezestart",
+    function(){
 
-  c.add(hand);
-
-
-  /*
-    Trigger = grab/release.
-  */
-
-  c.addEventListener(
-    "selectstart",
-    () => {
-
-      const origin =
-      new THREE.Vector3()
-      .setFromMatrixPosition(
-        c.matrixWorld
-      );
+      if(heldBlock){
+        return;
+      }
 
 
-      const q =
-      c.getWorldQuaternion(
-        tempQ
-      );
+      const handPosition =
+        new THREE.Vector3()
+          .setFromMatrixPosition(
+            controller.matrixWorld
+          );
 
 
-      const dir =
-      new THREE.Vector3(
-        0,
-        0,
-        -1
-      ).applyQuaternion(q);
+      let closest = null;
+
+      let distance = 0.65;
 
 
-      raycaster.set(
-        origin,
-        dir
-      );
-
-
-      const hit =
-      raycaster.intersectObjects(
-        blocks
-      )[0];
-
-
-      if(
-        hit &&
-        hit.distance < 5
+      for(
+        const block of blocks
       ){
 
-        held === hit.object
-          ? release()
-          : grab(
-              hit.object,
-              c
-            );
+        if(block.userData.held){
+          continue;
+        }
+
+
+        const d =
+          handPosition.distanceTo(
+            block.position
+          );
+
+
+        if(d < distance){
+
+          closest = block;
+
+          distance = d;
+        }
       }
+
+
+      if(!closest){
+
+        document.getElementById(
+          "msg"
+        ).textContent =
+          "Move your hand closer";
+
+        return;
+      }
+
+
+      heldBlock = closest;
+
+      heldController =
+        controller;
+
+      heldBlock.userData.held =
+        true;
+
+
+      document.getElementById(
+        "msg"
+      ).textContent =
+        "GRABBED";
     }
   );
 
 
-  scene.add(c);
+  /*
+    GRIP RELEASE
+  */
 
-  controllers.push(c);
+  controller.addEventListener(
+    "squeezeend",
+    function(){
+
+      if(
+        !heldBlock ||
+        heldController !== controller
+      ){
+        return;
+      }
+
+
+      heldBlock.userData.held =
+        false;
+
+
+      heldBlock = null;
+
+      heldController = null;
+
+
+      document.getElementById(
+        "msg"
+      ).textContent =
+        "DROPPED";
+    }
+  );
+
+
+  scene.add(controller);
+
+  controllers.push(controller);
 }
 
 
 /* =========================
-   MOUSE LOOK
+   HELD BLOCK
 ========================= */
 
-let mouseLook = false;
+function updateHeldBlock(){
 
-let lastX = 0;
-
-let lastY = 0;
-
-
-addEventListener(
-  "pointermove",
-  e => {
-
-    if(
-      !mouseLook ||
-      renderer.xr.isPresenting
-    )
-      return;
+  if(
+    !heldBlock ||
+    !heldController
+  ){
+    return;
+  }
 
 
-    const dx =
-    e.clientX - lastX;
-
-    const dy =
-    e.clientY - lastY;
-
-
-    camera.rotation.order =
-    "YXZ";
+  const position =
+    new THREE.Vector3()
+      .setFromMatrixPosition(
+        heldController.matrixWorld
+      );
 
 
-    camera.rotation.y -=
-    dx * .003;
+  heldBlock.position.copy(
+    position
+  );
+}
 
 
-    camera.rotation.x =
-    Math.max(
-      -1.45,
-      Math.min(
-        1.45,
-        camera.rotation.x -
-        dy * .003
-      )
+/* =========================
+   SIMPLE GRAVITY
+========================= */
+
+const velocity =
+  new THREE.Vector3();
+
+
+const clock =
+  new THREE.Clock();
+
+
+function updatePhysics(){
+
+  const dt =
+    Math.min(
+      clock.getDelta(),
+      0.033
     );
 
 
-    lastX =
-    e.clientX;
+  for(
+    const block of blocks
+  ){
 
-    lastY =
-    e.clientY;
-  }
-);
+    if(block.userData.held){
+      continue;
+    }
 
 
-addEventListener(
-  "pointerdown",
-  e => {
+    /*
+      Keep blocks on the floor
+      for this first stable test.
+    */
 
     if(
-      !renderer.xr.isPresenting
+      block.position.y <
+      0.275
     ){
 
-      mouseLook = true;
-
-      lastX =
-      e.clientX;
-
-      lastY =
-      e.clientY;
+      block.position.y =
+        0.275;
     }
   }
-);
 
 
-addEventListener(
-  "pointerup",
-  () => {
-
-    mouseLook = false;
-  }
-);
+  updateHeldBlock();
+}
 
 
 /* =========================
    ANIMATION
 ========================= */
 
-const clock =
-new THREE.Clock();
-
-
 function animate(){
 
-  const dt =
-  Math.min(
-    clock.getDelta(),
-    .033
-  );
-
-
-  /*
-    Held block follows
-    the VR controller.
-  */
-
-  if(held){
-
-    if(
-      renderer.xr.isPresenting &&
-      heldController
-    ){
-
-      const origin =
-      new THREE.Vector3()
-      .setFromMatrixPosition(
-        heldController.matrixWorld
-      );
-
-
-      const dir =
-      new THREE.Vector3(
-        0,
-        0,
-        -1
-      ).applyQuaternion(
-        heldController.getWorldQuaternion(
-          tempQ
-        )
-      );
-
-
-      held.position.copy(
-        origin
-      );
-
-      held.position.addScaledVector(
-        dir,
-        1.15
-      );
-
-      held.userData.vel.set(
-        0,
-        0,
-        0
-      );
-
-    }else{
-
-      const dir =
-      new THREE.Vector3(
-        0,
-        0,
-        -1
-      ).applyQuaternion(
-        camera.quaternion
-      );
-
-
-      held.position.copy(
-        camera.position
-      );
-
-      held.position.addScaledVector(
-        dir,
-        1.2
-      );
-
-      held.userData.vel.set(
-        0,
-        0,
-        0
-      );
-    }
-  }
-
-
-  /*
-    Basic physics.
-  */
-
-  for(
-    const b of blocks
-  ){
-
-    if(b.userData.held)
-      continue;
-
-
-    const v =
-    b.userData.vel;
-
-
-    v.y -=
-    7 * dt;
-
-
-    b.position.addScaledVector(
-      v,
-      dt
-    );
-
-
-    const half =
-    .275;
-
-
-    if(
-      b.position.y <
-      half
-    ){
-
-      b.position.y =
-      half;
-
-      v.y *=
-      -.25;
-
-      v.x *=
-      .92;
-
-      v.z *=
-      .92;
-    }
-
-
-    if(
-      b.position.x <
-      -3.7 ||
-      b.position.x >
-      3.7
-    ){
-
-      v.x *=
-      -.4;
-    }
-
-
-    if(
-      b.position.z <
-      -3.7 ||
-      b.position.z >
-      3.7
-    ){
-
-      v.z *=
-      -.4;
-    }
-  }
+  updatePhysics();
 
 
   renderer.render(
@@ -981,11 +690,11 @@ renderer.setAnimationLoop(
 
 addEventListener(
   "resize",
-  () => {
+  function(){
 
     camera.aspect =
-    innerWidth /
-    innerHeight;
+      innerWidth /
+      innerHeight;
 
     camera.updateProjectionMatrix();
 
@@ -993,6 +702,89 @@ addEventListener(
       innerWidth,
       innerHeight
     );
+  }
+);
+
+
+/* =========================
+   DESKTOP CLICK TEST
+========================= */
+
+const raycaster =
+  new THREE.Raycaster();
+
+const mouse =
+  new THREE.Vector2();
+
+
+addEventListener(
+  "pointerdown",
+  function(event){
+
+    if(renderer.xr.isPresenting){
+      return;
+    }
+
+
+    mouse.x =
+      event.clientX /
+      innerWidth * 2 - 1;
+
+    mouse.y =
+      -(event.clientY /
+      innerHeight) * 2 + 1;
+
+
+    raycaster.setFromCamera(
+      mouse,
+      camera
+    );
+
+
+    const hit =
+      raycaster.intersectObjects(
+        blocks
+      )[0];
+
+
+    if(hit){
+
+      heldBlock =
+        hit.object;
+
+      heldBlock.userData.held =
+        true;
+
+      document.getElementById(
+        "msg"
+      ).textContent =
+        "GRABBED";
+    }
+  }
+);
+
+
+addEventListener(
+  "pointerup",
+  function(){
+
+    if(
+      !renderer.xr.isPresenting &&
+      heldBlock
+    ){
+
+      heldBlock.userData.held =
+        false;
+
+      heldBlock = null;
+
+      heldController = null;
+
+      document.getElementById(
+        "msg"
+      ).textContent =
+        "DROPPED";
+    }
   }
 );
 
