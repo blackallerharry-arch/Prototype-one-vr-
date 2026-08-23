@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mini VR Block Room V5</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mini VR Block Room V6</title>
 
 <style>
 html,body{
@@ -11,15 +11,15 @@ html,body{
   width:100%;
   height:100%;
   overflow:hidden;
-  background:#11151c;
-  font-family:Arial,sans-serif;
+  background:#10141b;
+  font-family:system-ui,Arial,sans-serif;
 }
 
 #hud{
   position:fixed;
-  top:12px;
-  left:12px;
   z-index:10;
+  left:12px;
+  top:12px;
   color:white;
   background:#000b;
   padding:12px;
@@ -29,33 +29,33 @@ html,body{
 
 #vr{
   position:fixed;
-  top:12px;
-  right:12px;
   z-index:10;
-  padding:12px 18px;
+  right:12px;
+  top:12px;
   border:0;
   border-radius:10px;
-  font-weight:bold;
+  padding:12px 16px;
+  font-weight:700;
 }
 
-#mode{
+#modeButton{
   position:fixed;
-  bottom:18px;
-  left:50%;
-  transform:translateX(-50%);
   z-index:10;
-  padding:12px 18px;
+  left:50%;
+  bottom:18px;
+  transform:translateX(-50%);
   border:0;
   border-radius:10px;
-  font-weight:bold;
+  padding:12px 18px;
+  font-weight:700;
 }
 
 #msg{
   position:fixed;
-  bottom:70px;
-  left:50%;
-  transform:translateX(-50%);
   z-index:10;
+  left:50%;
+  bottom:70px;
+  transform:translateX(-50%);
   color:white;
   background:#000b;
   padding:8px 14px;
@@ -67,14 +67,14 @@ html,body{
 <body>
 
 <div id="hud">
-<b>Mini VR Block Room</b><br>
-Mode: <span id="modeText">HAND</span><br>
-HAND: grip near a block<br>
-POINTER: trigger to grab
+  <b>Mini VR Block Room</b><br>
+  Mode: <span id="modeText">HAND</span><br>
+  HAND: grip near a block<br>
+  POINTER: trigger to grab
 </div>
 
 <button id="vr">ENTER VR</button>
-<button id="mode">SWITCH TO POINTER</button>
+<button id="modeButton">SWITCH TO POINTER</button>
 <div id="msg">Ready</div>
 
 <script type="module">
@@ -86,9 +86,9 @@ import { VRButton } from
 "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/webxr/VRButton.js";
 
 
-/* =========================
+/* =====================================================
    SCENE
-========================= */
+===================================================== */
 
 const scene = new THREE.Scene();
 
@@ -96,7 +96,11 @@ scene.background =
   new THREE.Color(0x151c27);
 
 scene.fog =
-  new THREE.Fog(0x151c27,8,20);
+  new THREE.Fog(
+    0x151c27,
+    8,
+    20
+  );
 
 
 const camera =
@@ -107,8 +111,16 @@ const camera =
     60
   );
 
-camera.position.set(0,1.65,4);
+camera.position.set(
+  0,
+  1.65,
+  4
+);
 
+
+/* =====================================================
+   RENDERER
+===================================================== */
 
 const renderer =
   new THREE.WebGLRenderer({
@@ -121,7 +133,10 @@ renderer.setSize(
 );
 
 renderer.setPixelRatio(
-  Math.min(devicePixelRatio,2)
+  Math.min(
+    window.devicePixelRatio || 1,
+    2
+  )
 );
 
 renderer.xr.enabled = true;
@@ -133,24 +148,30 @@ document.body.appendChild(
 );
 
 
-/* =========================
+/* =====================================================
    VR BUTTON
-========================= */
+===================================================== */
 
 const vrButton =
-  VRButton.createButton(renderer);
+  VRButton.createButton(
+    renderer
+  );
 
 vrButton.style.display = "none";
 
-document.body.appendChild(vrButton);
+document.body.appendChild(
+  vrButton
+);
 
 document.getElementById("vr").onclick =
-  () => vrButton.click();
+  function(){
+    vrButton.click();
+  };
 
 
-/* =========================
-   LIGHT
-========================= */
+/* =====================================================
+   LIGHTING
+===================================================== */
 
 scene.add(
   new THREE.HemisphereLight(
@@ -160,69 +181,105 @@ scene.add(
   )
 );
 
-const light =
+
+const sun =
   new THREE.DirectionalLight(
     0xffffff,
     3
   );
 
-light.position.set(3,6,3);
+sun.position.set(
+  3,
+  6,
+  3
+);
 
-light.castShadow = true;
+sun.castShadow = true;
 
-scene.add(light);
+scene.add(sun);
 
 
-/* =========================
+/* =====================================================
    FLOOR
-========================= */
+===================================================== */
 
 const floor =
   new THREE.Mesh(
-    new THREE.BoxGeometry(8,.2,8),
+    new THREE.BoxGeometry(
+      8,
+      0.2,
+      8
+    ),
     new THREE.MeshStandardMaterial({
-      color:0x555e68
+      color:0x555e68,
+      roughness:0.9
     })
   );
 
-floor.position.y = -.1;
+floor.position.y = -0.1;
 
 floor.receiveShadow = true;
 
 scene.add(floor);
 
 
-/* =========================
+/* =====================================================
    WALLS
-========================= */
+===================================================== */
 
-function wall(x,y,z,sx,sy,sz){
+function createWall(
+  x,
+  y,
+  z,
+  sx,
+  sy,
+  sz
+){
 
-  const w =
+  const wall =
     new THREE.Mesh(
       new THREE.BoxGeometry(
-        sx,sy,sz
+        sx,
+        sy,
+        sz
       ),
       new THREE.MeshStandardMaterial({
-        color:0x303844
+        color:0x303844,
+        roughness:0.8
       })
     );
 
-  w.position.set(x,y,z);
+  wall.position.set(
+    x,
+    y,
+    z
+  );
 
-  w.receiveShadow = true;
+  wall.receiveShadow = true;
 
-  scene.add(w);
+  scene.add(wall);
 }
 
-wall(0,2,-4,8,4,.2);
-wall(-4,2,0,.2,4,8);
-wall(4,2,0,.2,4,8);
+
+createWall(
+  0,2,-4,
+  8,4,0.2
+);
+
+createWall(
+  -4,2,0,
+  0.2,4,8
+);
+
+createWall(
+  4,2,0,
+  0.2,4,8
+);
 
 
-/* =========================
+/* =====================================================
    BLOCKS
-========================= */
+===================================================== */
 
 const blocks = [];
 
@@ -235,38 +292,50 @@ const colours = [
   0x4fc7c7
 ];
 
-const blockSize = .55;
-const half = blockSize / 2;
+const BLOCK_SIZE = 0.55;
+
+const HALF_BLOCK =
+  BLOCK_SIZE / 2;
 
 
-function createBlock(i,x,y,z){
+function createBlock(
+  index,
+  x,
+  y,
+  z
+){
 
   const block =
     new THREE.Mesh(
       new THREE.BoxGeometry(
-        blockSize,
-        blockSize,
-        blockSize
+        BLOCK_SIZE,
+        BLOCK_SIZE,
+        BLOCK_SIZE
       ),
       new THREE.MeshStandardMaterial({
-        color:colours[
-          i % colours.length
-        ],
-        roughness:.6
+        color:
+          colours[
+            index % colours.length
+          ],
+        roughness:0.6
       })
     );
 
   block.position.set(
-    x,y,z
+    x,
+    y,
+    z
   );
 
   block.castShadow = true;
+
   block.receiveShadow = true;
 
   block.userData.velocity =
     new THREE.Vector3();
 
-  block.userData.held = false;
+  block.userData.held =
+    false;
 
   scene.add(block);
 
@@ -274,30 +343,37 @@ function createBlock(i,x,y,z){
 }
 
 
-const positions = [
-  [-1.5,.275,-1.2],
-  [-.75,.275,-1.2],
-  [0,.275,-1.2],
-  [.75,.275,-1.2],
-  [1.5,.275,-1.2],
-  [-.75,.825,-1.2],
-  [0,.825,-1.2]
+const blockPositions = [
+
+  [-1.5,0.275,-1.2],
+  [-0.75,0.275,-1.2],
+  [0,0.275,-1.2],
+  [0.75,0.275,-1.2],
+  [1.5,0.275,-1.2],
+
+  [-0.75,0.825,-1.2],
+  [0,0.825,-1.2]
+
 ];
 
-positions.forEach(
-  (p,i) =>
+
+blockPositions.forEach(
+  function(position,index){
+
     createBlock(
-      i,
-      p[0],
-      p[1],
-      p[2]
-    )
+      index,
+      position[0],
+      position[1],
+      position[2]
+    );
+
+  }
 );
 
 
-/* =========================
+/* =====================================================
    MODE
-========================= */
+===================================================== */
 
 let mode = "hand";
 
@@ -308,7 +384,7 @@ const modeText =
 
 const modeButton =
   document.getElementById(
-    "mode"
+    "modeButton"
   );
 
 
@@ -321,75 +397,82 @@ function setMode(newMode){
       ? "HAND"
       : "POINTER";
 
+
   modeButton.textContent =
     mode === "hand"
       ? "SWITCH TO POINTER"
       : "SWITCH TO HAND";
 
-  if(held){
 
-    held.userData.held = false;
+  if(heldBlock){
 
-    held = null;
+    heldBlock.userData.held =
+      false;
+
+    heldBlock = null;
 
     heldController = null;
   }
 
-  for(const c of controllers){
 
-    c.userData.pointer.visible =
+  for(
+    const controller of controllers
+  ){
+
+    controller.userData.pointer.visible =
       mode === "pointer";
 
-    c.userData.hand.visible =
+    controller.userData.hand.visible =
       mode === "hand";
   }
 
-  document.getElementById(
-    "msg"
-  ).textContent =
+
+  showMessage(
     mode === "hand"
       ? "HAND MODE"
-      : "POINTER MODE";
+      : "POINTER MODE"
+  );
 }
 
 
-modeButton.onclick = () => {
+modeButton.onclick =
+  function(){
 
-  setMode(
-    mode === "hand"
-      ? "pointer"
-      : "hand"
-  );
+    if(mode === "hand"){
+      setMode("pointer");
+    }else{
+      setMode("hand");
+    }
 
-};
+  };
 
 
-/* =========================
+/* =====================================================
    CONTROLLERS
-========================= */
+===================================================== */
 
 const controllers = [];
 
-let held = null;
+let heldBlock = null;
 
 let heldController = null;
 
 let holdDistance = 1.2;
 
 
-/* =========================
+/* =====================================================
    RAYCASTER
-========================= */
+===================================================== */
 
 const raycaster =
   new THREE.Raycaster();
 
 
-/* =========================
+/* =====================================================
    POINTER
-========================= */
+===================================================== */
 
-function makePointer(){
+function createPointer(){
 
   const geometry =
     new THREE.BufferGeometry();
@@ -399,70 +482,102 @@ function makePointer(){
     new THREE.Vector3(0,0,-5)
   ]);
 
-  const line =
+
+  const material =
+    new THREE.LineBasicMaterial({
+      color:0x00ffff,
+      linewidth:2
+    });
+
+
+  const pointer =
     new THREE.Line(
       geometry,
-      new THREE.LineBasicMaterial({
-        color:0x00ffff
-      })
+      material
     );
 
-  line.visible = false;
 
-  return line;
+  pointer.visible = false;
+
+  return pointer;
 }
 
 
-/* =========================
-   HAND
-========================= */
+/* =====================================================
+   SMALL HAND
+===================================================== */
 
-function makeHand(){
+function createHand(){
 
   const hand =
     new THREE.Group();
 
 
+  /*
+    Everything is scaled to 60%
+    so the hand is much smaller.
+  */
+
+  hand.scale.set(
+    0.6,
+    0.6,
+    0.6
+  );
+
+
+  const skin =
+    new THREE.MeshStandardMaterial({
+      color:0xd69a78,
+      roughness:0.8
+    });
+
+
   const palm =
     new THREE.Mesh(
       new THREE.BoxGeometry(
-        .18,.14,.22
+        0.18,
+        0.14,
+        0.22
       ),
-      new THREE.MeshStandardMaterial({
-        color:0xd69a78
-      })
+      skin
     );
 
-  palm.position.z = -.02;
+  palm.position.z = -0.02;
 
   hand.add(palm);
 
 
   const fingers = [];
 
-  for(let i=0;i<4;i++){
+
+  for(
+    let i=0;
+    i<4;
+    i++
+  ){
 
     const finger =
       new THREE.Mesh(
         new THREE.CapsuleGeometry(
-          .018,
-          .09,
+          0.018,
+          0.09,
           4,
           8
         ),
-        new THREE.MeshStandardMaterial({
-          color:0xe2aa84
-        })
+        skin
       );
 
+
     finger.position.set(
-      -.06 + i*.04,
+      -0.06 + i * 0.04,
       0,
-      -.14
+      -0.14
     );
+
 
     finger.rotation.x =
       Math.PI / 2;
+
 
     hand.add(finger);
 
@@ -473,36 +588,53 @@ function makeHand(){
   const thumb =
     new THREE.Mesh(
       new THREE.CapsuleGeometry(
-        .02,.08,4,8
+        0.02,
+        0.08,
+        4,
+        8
       ),
-      new THREE.MeshStandardMaterial({
-        color:0xe2aa84
-      })
+      skin
     );
 
+
   thumb.position.set(
-    -.1,-.01,-.05
+    -0.1,
+    -0.01,
+    -0.05
   );
 
-  thumb.rotation.z = -.7;
+
+  thumb.rotation.z =
+    -0.7;
+
 
   hand.add(thumb);
 
 
-  hand.userData.fingers = fingers;
-  hand.userData.thumb = thumb;
+  hand.userData.fingers =
+    fingers;
+
+  hand.userData.thumb =
+    thumb;
+
 
   return hand;
 }
 
 
-/* =========================
+/* =====================================================
    HAND ANIMATION
-========================= */
+===================================================== */
 
-function animateHand(hand,grabbing){
+function setHandGrab(
+  hand,
+  grabbing
+){
 
-  if(!hand) return;
+  if(!hand){
+    return;
+  }
+
 
   for(
     const finger of
@@ -510,308 +642,471 @@ function animateHand(hand,grabbing){
   ){
 
     finger.rotation.y =
-      grabbing ? -.9 : 0;
+      grabbing
+        ? -0.9
+        : 0;
   }
 
+
   hand.userData.thumb.rotation.z =
-    grabbing ? -.2 : -.7;
+    grabbing
+      ? -0.2
+      : -0.7;
 }
 
 
-/* =========================
+/* =====================================================
    CREATE CONTROLLERS
-========================= */
+===================================================== */
 
-for(let i=0;i<2;i++){
+for(
+  let i=0;
+  i<2;
+  i++
+){
 
   const controller =
     renderer.xr.getController(i);
 
-  controller.userData.index = i;
+
+  controller.userData.index =
+    i;
 
 
   const pointer =
-    makePointer();
+    createPointer();
 
-  controller.add(pointer);
+
+  controller.add(
+    pointer
+  );
+
 
   controller.userData.pointer =
     pointer;
 
 
   const hand =
-    makeHand();
+    createHand();
 
-  controller.add(hand);
+
+  controller.add(
+    hand
+  );
+
 
   controller.userData.hand =
     hand;
 
 
-  /* TRIGGER */
+  /*
+    TRIGGER
+  */
 
   controller.addEventListener(
     "selectstart",
-    () => {
+    function(){
 
-      if(mode === "pointer"){
+      try{
 
-        pointerGrab(controller);
+        if(mode === "pointer"){
 
+          pointerGrab(
+            controller
+          );
+
+        }
+
+      }catch(error){
+
+        console.error(
+          "Pointer trigger error:",
+          error
+        );
+
+        showMessage(
+          "Pointer input error"
+        );
       }
+
     }
   );
 
 
   controller.addEventListener(
     "selectend",
-    () => {
+    function(){
 
-      if(mode === "pointer"){
+      try{
 
-        pointerDrop(controller);
+        if(mode === "pointer"){
+
+          pointerDrop(
+            controller
+          );
+
+        }
+
+      }catch(error){
+
+        console.error(
+          "Pointer release error:",
+          error
+        );
+
+        if(heldBlock){
+
+          heldBlock.userData.held =
+            false;
+
+          heldBlock = null;
+
+          heldController = null;
+        }
 
       }
+
     }
   );
 
 
-  /* GRIP */
+  /*
+    GRIP
+  */
 
   controller.addEventListener(
     "squeezestart",
-    () => {
+    function(){
 
-      if(mode === "hand"){
+      try{
 
-        handGrab(controller);
+        if(mode === "hand"){
 
+          handGrab(
+            controller
+          );
+
+        }
+
+      }catch(error){
+
+        console.error(
+          "Hand grab error:",
+          error
+        );
       }
+
     }
   );
 
 
   controller.addEventListener(
     "squeezeend",
-    () => {
+    function(){
 
-      if(mode === "hand"){
+      try{
 
-        handThrow(controller);
+        if(mode === "hand"){
+
+          handThrow(
+            controller
+          );
+
+        }
+
+      }catch(error){
+
+        console.error(
+          "Hand throw error:",
+          error
+        );
 
       }
+
     }
   );
 
 
-  scene.add(controller);
+  scene.add(
+    controller
+  );
 
-  controllers.push(controller);
+
+  controllers.push(
+    controller
+  );
 }
 
 
-/* =========================
+/* =====================================================
    CONTROLLER POSITION
-========================= */
+===================================================== */
 
-function controllerPosition(c){
+function getControllerPosition(
+  controller
+){
 
   return new THREE.Vector3()
     .setFromMatrixPosition(
-      c.matrixWorld
+      controller.matrixWorld
     );
 }
 
 
-/* =========================
+/* =====================================================
    CONTROLLER DIRECTION
-========================= */
+===================================================== */
 
-function controllerDirection(c){
+function getControllerDirection(
+  controller
+){
 
-  const q =
-    c.getWorldQuaternion(
+  const quaternion =
+    controller.getWorldQuaternion(
       new THREE.Quaternion()
     );
 
+
   return new THREE.Vector3(
-    0,0,-1
-  ).applyQuaternion(q);
+    0,
+    0,
+    -1
+  ).applyQuaternion(
+    quaternion
+  );
 }
 
 
-/* =========================
+/* =====================================================
    HAND GRAB
-========================= */
+===================================================== */
 
-function handGrab(controller){
+function handGrab(
+  controller
+){
 
-  if(held) return;
+  if(heldBlock){
+    return;
+  }
+
 
   const handPosition =
-    controllerPosition(
+    getControllerPosition(
       controller
     );
 
 
-  let closest = null;
+  let closestBlock = null;
 
-  let closestDistance = .6;
+  let closestDistance = 0.6;
 
 
-  for(const block of blocks){
+  for(
+    const block of blocks
+  ){
 
-    if(block.userData.held)
+    if(block.userData.held){
       continue;
+    }
+
 
     const distance =
       handPosition.distanceTo(
         block.position
       );
 
-    if(distance < closestDistance){
 
-      closest = block;
+    if(
+      distance <
+      closestDistance
+    ){
+
+      closestBlock =
+        block;
 
       closestDistance =
         distance;
     }
+
   }
 
 
-  if(!closest){
+  if(!closestBlock){
 
-    document.getElementById(
-      "msg"
-    ).textContent =
-      "Put your hand near a block";
+    showMessage(
+      "Move your hand closer"
+    );
 
     return;
   }
 
 
-  held = closest;
+  heldBlock =
+    closestBlock;
 
   heldController =
     controller;
 
-  held.userData.held = true;
 
-  animateHand(
+  heldBlock.userData.held =
+    true;
+
+
+  setHandGrab(
     controller.userData.hand,
     true
   );
 
-  document.getElementById(
-    "msg"
-  ).textContent =
-    "GRABBED";
+
+  showMessage(
+    "GRABBED"
+  );
 }
 
 
-/* =========================
-   THROW
-========================= */
+/* =====================================================
+   CONTROLLER VELOCITY
+===================================================== */
 
-const oldPositions = new Map();
+const previousPositions =
+  new Map();
 
-const velocities = new Map();
+const controllerVelocities =
+  new Map();
 
 
 function updateControllerVelocity(
-  dt
+  deltaTime
 ){
 
-  for(const controller of controllers){
+  for(
+    const controller of
+    controllers
+  ){
 
-    const position =
-      controllerPosition(
+    const current =
+      getControllerPosition(
         controller
       );
 
-    const old =
-      oldPositions.get(
+
+    const previous =
+      previousPositions.get(
         controller
       );
 
-    if(old){
+
+    if(previous){
 
       const velocity =
-        position.clone()
-          .sub(old)
+        current
+          .clone()
+          .sub(previous)
           .divideScalar(
-            Math.max(dt,.001)
+            Math.max(
+              deltaTime,
+              0.001
+            )
           );
 
-      velocities.set(
+
+      controllerVelocities.set(
         controller,
         velocity
       );
     }
 
-    oldPositions.set(
+
+    previousPositions.set(
       controller,
-      position
+      current
     );
   }
 }
 
 
-function handThrow(controller){
+/* =====================================================
+   HAND THROW
+===================================================== */
+
+function handThrow(
+  controller
+){
 
   if(
-    !held ||
+    !heldBlock ||
     heldController !== controller
-  )
+  ){
+
     return;
+  }
 
 
   const velocity =
-    velocities.get(
+    controllerVelocities.get(
       controller
-    ) ||
-    new THREE.Vector3();
+    );
 
 
-  held.userData.held = false;
-
-  held.userData.velocity
-    .copy(velocity)
-    .multiplyScalar(2.2);
+  heldBlock.userData.held =
+    false;
 
 
-  held = null;
+  if(velocity){
+
+    heldBlock.userData.velocity
+      .copy(velocity)
+      .multiplyScalar(2.2);
+
+  }else{
+
+    heldBlock.userData.velocity.set(
+      0,
+      0,
+      0
+    );
+
+  }
+
+
+  heldBlock = null;
 
   heldController = null;
 
-  animateHand(
+
+  setHandGrab(
     controller.userData.hand,
     false
   );
 
-  document.getElementById(
-    "msg"
-  ).textContent =
-    "THROWN";
+
+  showMessage(
+    "THROWN"
+  );
 }
 
 
-/* =========================
+/* =====================================================
    POINTER GRAB
-========================= */
+===================================================== */
 
-function pointerGrab(controller){
+function pointerGrab(
+  controller
+){
 
-  if(held) return;
+  if(heldBlock){
+    return;
+  }
 
 
   const origin =
-    controllerPosition(
+    getControllerPosition(
       controller
     );
 
+
   const direction =
-    controllerDirection(
+    getControllerDirection(
       controller
     );
 
@@ -822,90 +1117,121 @@ function pointerGrab(controller){
   );
 
 
-  const hit =
+  const intersections =
     raycaster.intersectObjects(
       blocks,
       false
-    )[0];
+    );
 
 
   if(
-    !hit ||
-    hit.distance > 5
+    intersections.length === 0
   ){
 
-    document.getElementById(
-      "msg"
-    ).textContent =
-      "Point at a block";
+    showMessage(
+      "Point at a block"
+    );
 
     return;
   }
 
 
-  held = hit.object;
+  const hit =
+    intersections[0];
+
+
+  if(
+    hit.distance > 5
+  ){
+
+    showMessage(
+      "Too far away"
+    );
+
+    return;
+  }
+
+
+  heldBlock =
+    hit.object;
+
 
   heldController =
     controller;
 
-  held.userData.held = true;
+
+  heldBlock.userData.held =
+    true;
+
 
   holdDistance =
     THREE.MathUtils.clamp(
       hit.distance,
-      .7,
+      0.7,
       4
     );
 
 
-  document.getElementById(
-    "msg"
-  ).textContent =
-    "HOLDING";
+  showMessage(
+    "HOLDING"
+  );
 }
 
 
-/* =========================
+/* =====================================================
    POINTER DROP
-========================= */
+===================================================== */
 
-function pointerDrop(controller){
+function pointerDrop(
+  controller
+){
 
   if(
-    !held ||
+    !heldBlock ||
     heldController !== controller
-  )
+  ){
+
     return;
+  }
 
 
-  /* NO THROW */
+  /*
+    IMPORTANT:
+    Pointer mode DOES NOT THROW.
+  */
 
-  held.userData.held = false;
+  heldBlock.userData.held =
+    false;
 
-  held.userData.velocity.set(
-    0,0,0
+
+  heldBlock.userData.velocity.set(
+    0,
+    0,
+    0
   );
 
 
-  held = null;
+  heldBlock = null;
 
   heldController = null;
 
 
-  document.getElementById(
-    "msg"
-  ).textContent =
-    "DROPPED";
+  showMessage(
+    "DROPPED"
+  );
 }
 
 
-/* =========================
-   POINTER RAY
-========================= */
+/* =====================================================
+   UPDATE POINTER
+===================================================== */
 
 function updatePointers(){
 
-  for(const controller of controllers){
+  for(
+    const controller of
+    controllers
+  ){
 
     const pointer =
       controller.userData.pointer;
@@ -916,17 +1242,19 @@ function updatePointers(){
       renderer.xr.isPresenting;
 
 
-    if(!pointer.visible)
+    if(!pointer.visible){
       continue;
+    }
 
 
     const origin =
-      controllerPosition(
+      getControllerPosition(
         controller
       );
 
+
     const direction =
-      controllerDirection(
+      getControllerDirection(
         controller
       );
 
@@ -937,23 +1265,30 @@ function updatePointers(){
     );
 
 
-    const hit =
+    const intersections =
       raycaster.intersectObjects(
         blocks,
         false
-      )[0];
+      );
 
 
     let length = 5;
 
 
-    if(hit){
+    if(
+      intersections.length > 0
+    ){
+
+      const hit =
+        intersections[0];
+
 
       length =
         Math.min(
           hit.distance,
           5
         );
+
 
       pointer.material.color.setHex(
         0x00ff66
@@ -970,31 +1305,38 @@ function updatePointers(){
     pointer.geometry.setFromPoints([
       new THREE.Vector3(0,0,0),
       new THREE.Vector3(
-        0,0,-length
+        0,
+        0,
+        -length
       )
     ]);
   }
 }
 
 
-/* =========================
-   THUMBSTICK
-========================= */
+/* =====================================================
+   JOYSTICK
+===================================================== */
 
 function updateJoystick(){
 
   if(
     mode !== "pointer" ||
-    !held ||
+    !heldBlock ||
     !heldController
-  )
+  ){
+
     return;
+  }
 
 
   const session =
     renderer.xr.getSession();
 
-  if(!session) return;
+
+  if(!session){
+    return;
+  }
 
 
   const wantedHand =
@@ -1003,84 +1345,111 @@ function updateJoystick(){
       : "right";
 
 
+  let source = null;
+
+
   for(
-    const source of
+    const input of
     session.inputSources
   ){
 
     if(
-      source.handedness !==
-      wantedHand ||
-      !source.gamepad
-    )
-      continue;
+      input.handedness ===
+        wantedHand &&
+      input.gamepad
+    ){
+
+      source = input;
+
+      break;
     }
+  }
 
 
-    const axes =
-      source.gamepad.axes;
+  if(!source){
+    return;
+  }
 
 
-    if(!axes || axes.length < 2)
-      return;
+  const axes =
+    source.gamepad.axes;
 
 
-    const y =
-      axes.length >= 4
-        ? axes[3]
-        : axes[1];
-
-
-    if(Math.abs(y) > .12){
-
-      holdDistance +=
-        y * .035;
-
-      holdDistance =
-        THREE.MathUtils.clamp(
-          holdDistance,
-          .7,
-          4
-        );
-    }
+  if(
+    !axes ||
+    axes.length < 2
+  ){
 
     return;
+  }
+
+
+  /*
+    Quest controllers normally expose
+    the thumbstick through these axes.
+  */
+
+  const y =
+    axes.length >= 4
+      ? axes[3]
+      : axes[1];
+
+
+  if(
+    Math.abs(y) > 0.12
+  ){
+
+    holdDistance +=
+      y * 0.035;
+
+
+    holdDistance =
+      THREE.MathUtils.clamp(
+        holdDistance,
+        0.7,
+        4
+      );
+  }
 }
 
 
-/* =========================
+/* =====================================================
    MOVE HELD BLOCK
-========================= */
+===================================================== */
 
-function updateHeld(){
+function updateHeldBlock(){
 
   if(
-    !held ||
+    !heldBlock ||
     !heldController
-  )
+  ){
+
     return;
+  }
 
 
   const origin =
-    controllerPosition(
+    getControllerPosition(
       heldController
     );
 
 
-  if(mode === "pointer"){
+  if(
+    mode === "pointer"
+  ){
 
     const direction =
-      controllerDirection(
+      getControllerDirection(
         heldController
       );
 
 
-    held.position.copy(
+    heldBlock.position.copy(
       origin
     );
 
 
-    held.position.addScaledVector(
+    heldBlock.position.addScaledVector(
       direction,
       holdDistance
     );
@@ -1088,334 +1457,121 @@ function updateHeld(){
   }else{
 
     /*
-      HAND MODE:
-      block follows the hand.
+      Hand mode:
+      block stays in the hand.
     */
 
-    held.position.copy(
+    heldBlock.position.copy(
       origin
     );
   }
 
 
-  held.userData.velocity.set(
-    0,0,0
+  heldBlock.userData.velocity.set(
+    0,
+    0,
+    0
   );
 }
 
 
-/* =========================
+/* =====================================================
    PHYSICS
-========================= */
+===================================================== */
 
-function physics(dt){
+function updatePhysics(
+  deltaTime
+){
 
-  for(const block of blocks){
+  for(
+    const block of blocks
+  ){
 
-    if(block.userData.held)
+    if(block.userData.held){
       continue;
+    }
 
 
-    const v =
+    const velocity =
       block.userData.velocity;
 
 
-    v.y -= 7 * dt;
+    velocity.y -=
+      7 * deltaTime;
 
 
     block.position.addScaledVector(
-      v,
-      dt
+      velocity,
+      deltaTime
     );
+
+
+    /*
+      Floor
+    */
+
+    if(
+      block.position.y <
+      HALF_BLOCK
+    ){
+
+      block.position.y =
+        HALF_BLOCK;
+
+
+      if(
+        velocity.y < 0
+      ){
+
+        velocity.y *=
+          -0.25;
+      }
+
+
+      velocity.x *=
+        0.92;
+
+      velocity.z *=
+        0.92;
+    }
+
+
+    /*
+      Walls
+    */
+
+    if(
+      block.position.x <
+      -3.7
+    ){
+
+      block.position.x =
+        -3.7;
+
+      velocity.x *=
+        -0.4;
+    }
 
 
     if(
-      block.position.y < half
+      block.position.x >
+      3.7
     ){
 
-      block.position.y = half;
+      block.position.x =
+        3.7;
 
-      if(v.y < 0)
-        v.y *= -.25;
-
-      v.x *= .92;
-      v.z *= .92;
+      velocity.x *=
+        -0.4;
     }
 
-
-    if(block.position.x < -3.7){
-
-      block.position.x = -3.7;
-
-      v.x *= -.4;
-    }
-
-
-    if(block.position.x > 3.7){
-
-      block.position.x = 3.7;
-
-      v.x *= -.4;
-    }
-
-
-    if(block.position.z < -3.7){
-
-      block.position.z = -3.7;
-
-      v.z *= -.4;
-    }
-
-
-    if(block.position.z > 3.7){
-
-      block.position.z = 3.7;
-
-      v.z *= -.4;
-    }
-  }
-}
-
-
-/* =========================
-   DESKTOP
-========================= */
-
-let mouseHolding = false;
-
-addEventListener(
-  "pointerdown",
-  event => {
-
-    if(renderer.xr.isPresenting)
-      return;
-
-
-    const mouse =
-      new THREE.Vector2(
-        event.clientX /
-          innerWidth * 2 - 1,
-
-        -(event.clientY /
-          innerHeight) * 2 + 1
-      );
-
-
-    raycaster.setFromCamera(
-      mouse,
-      camera
-    );
-
-
-    const hit =
-      raycaster.intersectObjects(
-        blocks,
-        false
-      )[0];
-
-
-    if(hit){
-
-      held = hit.object;
-
-      held.userData.held = true;
-
-      mouseHolding = true;
-
-      document.getElementById(
-        "msg"
-      ).textContent =
-        "HOLDING";
-    }
-  }
-);
-
-
-addEventListener(
-  "pointerup",
-  () => {
 
     if(
-      mouseHolding &&
-      held
+      block.position.z <
+      -3.7
     ){
 
-      held.userData.held = false;
+      block.position.z =
+        -3.7;
 
-      held = null;
-
-      mouseHolding = false;
-
-      document.getElementById(
-        "msg"
-      ).textContent =
-        "DROPPED";
-    }
-  }
-);
-
-
-/* =========================
-   MOUSE LOOK
-========================= */
-
-let looking = false;
-
-let lastX = 0;
-let lastY = 0;
-
-
-addEventListener(
-  "pointerdown",
-  event => {
-
-    if(renderer.xr.isPresenting)
-      return;
-
-    looking = true;
-
-    lastX = event.clientX;
-    lastY = event.clientY;
-  }
-);
-
-
-addEventListener(
-  "pointermove",
-  event => {
-
-    if(
-      !looking ||
-      renderer.xr.isPresenting
-    )
-      return;
-
-
-    const dx =
-      event.clientX - lastX;
-
-    const dy =
-      event.clientY - lastY;
-
-
-    camera.rotation.order =
-      "YXZ";
-
-
-    camera.rotation.y -=
-      dx * .003;
-
-
-    camera.rotation.x =
-      THREE.MathUtils.clamp(
-        camera.rotation.x -
-          dy * .003,
-        -1.45,
-        1.45
-      );
-
-
-    lastX = event.clientX;
-    lastY = event.clientY;
-  }
-);
-
-
-addEventListener(
-  "pointerup",
-  () => {
-    looking = false;
-  }
-);
-
-
-/* =========================
-   MAIN LOOP
-========================= */
-
-const clock =
-  new THREE.Clock();
-
-
-function animate(){
-
-  const dt =
-    Math.min(
-      clock.getDelta(),
-      .033
-    );
-
-
-  if(renderer.xr.isPresenting){
-
-    updateControllerVelocity(dt);
-
-    updatePointers();
-
-    updateJoystick();
-
-    updateHeld();
-
-
-    for(
-      const controller of
-      controllers
-    ){
-
-      animateHand(
-        controller.userData.hand,
-        mode === "hand" &&
-        controller ===
-          heldController &&
-        held !== null
-      );
-    }
-  }
-
-
-  physics(dt);
-
-
-  renderer.render(
-    scene,
-    camera
-  );
-}
-
-
-renderer.setAnimationLoop(
-  animate
-);
-
-
-/* =========================
-   RESIZE
-========================= */
-
-addEventListener(
-  "resize",
-  () => {
-
-    camera.aspect =
-      innerWidth / innerHeight;
-
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(
-      innerWidth,
-      innerHeight
-    );
-  }
-);
-
-
-/* =========================
-   START
-========================= */
-
-setMode("hand");
-
-</script>
-
-</body>
-</html>
+      
