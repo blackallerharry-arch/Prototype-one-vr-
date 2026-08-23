@@ -3,63 +3,50 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Mini VR Block Room V6</title>
+<title>Mini VR Block Room v2</title>
 
 <style>
 html,body{
   margin:0;
-  width:100%;
   height:100%;
   overflow:hidden;
   background:#10141b;
-  font-family:system-ui,Arial,sans-serif;
+  font-family:system-ui,Arial
 }
 
 #hud{
   position:fixed;
-  z-index:10;
+  z-index:5;
   left:12px;
   top:12px;
-  color:white;
-  background:#000b;
-  padding:12px;
-  border-radius:12px;
-  line-height:1.4;
+  color:#fff;
+  background:#0009;
+  padding:10px 12px;
+  border-radius:10px;
+  line-height:1.35
 }
 
 #vr{
   position:fixed;
-  z-index:10;
+  z-index:6;
   right:12px;
   top:12px;
   border:0;
   border-radius:10px;
   padding:12px 16px;
-  font-weight:700;
-}
-
-#modeButton{
-  position:fixed;
-  z-index:10;
-  left:50%;
-  bottom:18px;
-  transform:translateX(-50%);
-  border:0;
-  border-radius:10px;
-  padding:12px 18px;
-  font-weight:700;
+  font-weight:700
 }
 
 #msg{
   position:fixed;
-  z-index:10;
+  z-index:5;
   left:50%;
-  bottom:70px;
+  bottom:20px;
   transform:translateX(-50%);
   color:white;
-  background:#000b;
-  padding:8px 14px;
-  border-radius:20px;
+  background:#0009;
+  padding:8px 12px;
+  border-radius:999px
 }
 </style>
 </head>
@@ -67,49 +54,52 @@ html,body{
 <body>
 
 <div id="hud">
-  <b>Mini VR Block Room</b><br>
-  Mode: <span id="modeText">HAND</span><br>
-  HAND: grip near a block<br>
-  POINTER: trigger to grab
+<b>Mini VR Block Room</b><br>
+VR: point at a block and press trigger.<br>
+Desktop: click a block. Drag the mouse to look around.
 </div>
 
 <button id="vr">ENTER VR</button>
-<button id="modeButton">SWITCH TO POINTER</button>
-<div id="msg">Ready</div>
+<div id="msg">Find a block</div>
 
 <script type="module">
 
 import * as THREE from
 "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
-import { VRButton } from
+import {VRButton} from
 "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/webxr/VRButton.js";
 
 
-/* =====================================================
+/* =========================
    SCENE
-===================================================== */
+========================= */
 
-const scene = new THREE.Scene();
+const scene =
+new THREE.Scene();
 
 scene.background =
-  new THREE.Color(0x151c27);
+new THREE.Color(0x151c27);
 
 scene.fog =
-  new THREE.Fog(
-    0x151c27,
-    8,
-    20
-  );
+new THREE.Fog(
+  0x151c27,
+  8,
+  20
+);
 
+
+/* =========================
+   CAMERA
+========================= */
 
 const camera =
-  new THREE.PerspectiveCamera(
-    70,
-    innerWidth / innerHeight,
-    0.05,
-    60
-  );
+new THREE.PerspectiveCamera(
+  70,
+  innerWidth / innerHeight,
+  .05,
+  60
+);
 
 camera.position.set(
   0,
@@ -118,14 +108,14 @@ camera.position.set(
 );
 
 
-/* =====================================================
+/* =========================
    RENDERER
-===================================================== */
+========================= */
 
 const renderer =
-  new THREE.WebGLRenderer({
-    antialias:true
-  });
+new THREE.WebGLRenderer({
+  antialias:true
+});
 
 renderer.setSize(
   innerWidth,
@@ -133,101 +123,104 @@ renderer.setSize(
 );
 
 renderer.setPixelRatio(
-  Math.min(
-    window.devicePixelRatio || 1,
-    2
-  )
+  Math.min(devicePixelRatio,2)
 );
 
 renderer.xr.enabled = true;
 
 renderer.shadowMap.enabled = true;
 
+renderer.shadowMap.type =
+THREE.PCFSoftShadowMap;
+
 document.body.appendChild(
   renderer.domElement
 );
 
 
-/* =====================================================
+/* =========================
    VR BUTTON
-===================================================== */
+========================= */
 
-const vrButton =
-  VRButton.createButton(
-    renderer
-  );
-
-vrButton.style.display = "none";
-
-document.body.appendChild(
-  vrButton
+const realVR =
+VRButton.createButton(
+  renderer
 );
 
-document.getElementById("vr").onclick =
-  function(){
-    vrButton.click();
-  };
+realVR.style.display =
+"none";
+
+document.body.appendChild(
+  realVR
+);
+
+document.querySelector("#vr").onclick =
+() => realVR.click();
 
 
-/* =====================================================
-   LIGHTING
-===================================================== */
+/* =========================
+   LIGHT
+========================= */
 
 scene.add(
   new THREE.HemisphereLight(
-    0xffffff,
-    0x333333,
-    2
+    0xbfd8ff,
+    0x26303b,
+    1.8
   )
 );
 
-
 const sun =
-  new THREE.DirectionalLight(
-    0xffffff,
-    3
-  );
+new THREE.DirectionalLight(
+  0xffffff,
+  3.2
+);
 
 sun.position.set(
-  3,
+  2,
   6,
   3
 );
 
 sun.castShadow = true;
 
+sun.shadow.mapSize.set(
+  1024,
+  1024
+);
+
 scene.add(sun);
 
 
-/* =====================================================
+/* =========================
    FLOOR
-===================================================== */
+========================= */
 
 const floor =
-  new THREE.Mesh(
-    new THREE.BoxGeometry(
-      8,
-      0.2,
-      8
-    ),
-    new THREE.MeshStandardMaterial({
-      color:0x555e68,
-      roughness:0.9
-    })
-  );
+new THREE.Mesh(
+  new THREE.BoxGeometry(
+    8,
+    .2,
+    8
+  ),
+  new THREE.MeshStandardMaterial({
+    color:0x555e68,
+    roughness:.9
+  })
+);
 
-floor.position.y = -0.1;
+floor.position.y = -.1;
 
 floor.receiveShadow = true;
 
 scene.add(floor);
 
 
-/* =====================================================
+/* =========================
    WALLS
-===================================================== */
+========================= */
 
-function createWall(
+function makeWall(
   x,
   y,
   z,
@@ -236,54 +229,53 @@ function createWall(
   sz
 ){
 
-  const wall =
-    new THREE.Mesh(
-      new THREE.BoxGeometry(
-        sx,
-        sy,
-        sz
-      ),
-      new THREE.MeshStandardMaterial({
-        color:0x303844,
-        roughness:0.8
-      })
-    );
+  const m =
+  new THREE.Mesh(
+    new THREE.BoxGeometry(
+      sx,
+      sy,
+      sz
+    ),
+    new THREE.MeshStandardMaterial({
+      color:0x2d3540,
+      roughness:.8
+    })
+  );
 
-  wall.position.set(
+  m.position.set(
     x,
     y,
     z
   );
 
-  wall.receiveShadow = true;
+  m.receiveShadow = true;
 
-  scene.add(wall);
+  scene.add(m);
 }
 
-
-createWall(
+makeWall(
   0,2,-4,
-  8,4,0.2
+  8,4,.2
 );
 
-createWall(
+makeWall(
   -4,2,0,
-  0.2,4,8
+  .2,4,8
 );
 
-createWall(
+makeWall(
   4,2,0,
-  0.2,4,8
+  .2,4,8
 );
 
 
-/* =====================================================
+/* =========================
    BLOCKS
-===================================================== */
+========================= */
 
 const blocks = [];
 
-const colours = [
+const colors = [
   0xe95f5f,
   0x5b9be8,
   0x63c777,
@@ -292,262 +284,275 @@ const colours = [
   0x4fc7c7
 ];
 
-const BLOCK_SIZE = 0.55;
 
-const HALF_BLOCK =
-  BLOCK_SIZE / 2;
-
-
-function createBlock(
-  index,
+function block(
+  i,
   x,
   y,
   z
 ){
 
-  const block =
-    new THREE.Mesh(
-      new THREE.BoxGeometry(
-        BLOCK_SIZE,
-        BLOCK_SIZE,
-        BLOCK_SIZE
-      ),
-      new THREE.MeshStandardMaterial({
-        color:
-          colours[
-            index % colours.length
-          ],
-        roughness:0.6
-      })
-    );
+  const b =
+  new THREE.Mesh(
+    new THREE.BoxGeometry(
+      .55,
+      .55,
+      .55
+    ),
+    new THREE.MeshStandardMaterial({
+      color:
+        colors[
+          i % colors.length
+        ],
+      roughness:.6,
+      metalness:.05
+    })
+  );
 
-  block.position.set(
+  b.position.set(
     x,
     y,
     z
   );
 
-  block.castShadow = true;
+  b.castShadow = true;
 
-  block.receiveShadow = true;
+  b.receiveShadow = true;
 
-  block.userData.velocity =
-    new THREE.Vector3();
+  b.userData.vel =
+  new THREE.Vector3();
 
-  block.userData.held =
-    false;
+  b.userData.held =
+  false;
 
-  scene.add(block);
+  scene.add(b);
 
-  blocks.push(block);
+  blocks.push(b);
 }
 
 
-const blockPositions = [
+[
+  [-1.5,.28,-1.2],
+  [-.75,.28,-1.2],
+  [0,.28,-1.2],
+  [.75,.28,-1.2],
+  [1.5,.28,-1.2],
+  [-.75,.83,-1.2],
+  [0,.83,-1.2]
+].forEach(
+  (p,i) =>
+    block(
+      i,
+      ...p
+    )
+);
 
-  [-1.5,0.275,-1.2],
-  [-0.75,0.275,-1.2],
-  [0,0.275,-1.2],
-  [0.75,0.275,-1.2],
-  [1.5,0.275,-1.2],
 
-  [-0.75,0.825,-1.2],
-  [0,0.825,-1.2]
+/* =========================
+   RAYCASTING
+========================= */
 
-];
+const raycaster =
+new THREE.Raycaster();
+
+const tempQ =
+new THREE.Quaternion();
+
+const tempV =
+new THREE.Vector3();
 
 
-blockPositions.forEach(
-  function(position,index){
+/* =========================
+   HELD BLOCK
+========================= */
 
-    createBlock(
-      index,
-      position[0],
-      position[1],
-      position[2]
+let held = null;
+
+let heldController = null;
+
+
+/* =========================
+   GRAB
+========================= */
+
+function grab(
+  b,
+  controller = null
+){
+
+  if(held){
+
+    held.userData.held =
+    false;
+
+    held = null;
+
+    heldController =
+    null;
+  }
+
+  held = b;
+
+  b.userData.held =
+  true;
+
+  heldController =
+  controller;
+
+  document.querySelector(
+    "#msg"
+  ).textContent =
+  "Block picked up — press again to release";
+}
+
+
+/* =========================
+   RELEASE
+========================= */
+
+function release(){
+
+  if(!held)
+    return;
+
+
+  held.userData.held =
+  false;
+
+
+  if(heldController){
+
+    tempV.set(
+      0,
+      0,
+      -1
     );
 
+    tempV.applyQuaternion(
+      heldController.getWorldQuaternion(
+        tempQ
+      )
+    );
+
+    tempV.multiplyScalar(3);
+
+    held.userData.vel.copy(
+      tempV
+    );
+
+  }else{
+
+    tempV.set(
+      0,
+      0,
+      -1
+    );
+
+    tempV.applyQuaternion(
+      camera.quaternion
+    );
+
+    tempV.multiplyScalar(2);
+
+    held.userData.vel.copy(
+      tempV
+    );
+  }
+
+
+  held = null;
+
+  heldController =
+  null;
+
+
+  document.querySelector(
+    "#msg"
+  ).textContent =
+  "Block released";
+}
+
+
+/* =========================
+   DESKTOP CLICK
+========================= */
+
+addEventListener(
+  "pointerdown",
+  e => {
+
+    const mouse =
+    new THREE.Vector2(
+      e.clientX /
+        innerWidth * 2 - 1,
+
+      -(e.clientY /
+        innerHeight) * 2 + 1
+    );
+
+
+    raycaster.setFromCamera(
+      mouse,
+      camera
+    );
+
+
+    const hit =
+    raycaster.intersectObjects(
+      blocks
+    )[0];
+
+
+    if(hit){
+
+      held === hit.object
+        ? release()
+        : grab(hit.object);
+    }
   }
 );
 
 
-/* =====================================================
-   MODE
-===================================================== */
+/* =========================
+   SMALL VR HAND
+========================= */
 
-let mode = "hand";
-
-const modeText =
-  document.getElementById(
-    "modeText"
-  );
-
-const modeButton =
-  document.getElementById(
-    "modeButton"
-  );
-
-
-function setMode(newMode){
-
-  mode = newMode;
-
-  modeText.textContent =
-    mode === "hand"
-      ? "HAND"
-      : "POINTER";
-
-
-  modeButton.textContent =
-    mode === "hand"
-      ? "SWITCH TO POINTER"
-      : "SWITCH TO HAND";
-
-
-  if(heldBlock){
-
-    heldBlock.userData.held =
-      false;
-
-    heldBlock = null;
-
-    heldController = null;
-  }
-
-
-  for(
-    const controller of controllers
-  ){
-
-    controller.userData.pointer.visible =
-      mode === "pointer";
-
-    controller.userData.hand.visible =
-      mode === "hand";
-  }
-
-
-  showMessage(
-    mode === "hand"
-      ? "HAND MODE"
-      : "POINTER MODE"
-  );
-}
-
-
-modeButton.onclick =
-  function(){
-
-    if(mode === "hand"){
-      setMode("pointer");
-    }else{
-      setMode("hand");
-    }
-
-  };
-
-
-/* =====================================================
-   CONTROLLERS
-===================================================== */
-
-const controllers = [];
-
-let heldBlock = null;
-
-let heldController = null;
-
-let holdDistance = 1.2;
-
-
-/* =====================================================
-   RAYCASTER
-===================================================== */
-
-const raycaster =
-  new THREE.Raycaster();
-
-
-/* =====================================================
-   POINTER
-===================================================== */
-
-function createPointer(){
-
-  const geometry =
-    new THREE.BufferGeometry();
-
-  geometry.setFromPoints([
-    new THREE.Vector3(0,0,0),
-    new THREE.Vector3(0,0,-5)
-  ]);
-
-
-  const material =
-    new THREE.LineBasicMaterial({
-      color:0x00ffff,
-      linewidth:2
-    });
-
-
-  const pointer =
-    new THREE.Line(
-      geometry,
-      material
-    );
-
-
-  pointer.visible = false;
-
-  return pointer;
-}
-
-
-/* =====================================================
-   SMALL HAND
-===================================================== */
-
-function createHand(){
+function makeSmallHand(){
 
   const hand =
-    new THREE.Group();
-
+  new THREE.Group();
 
   /*
-    Everything is scaled to 60%
-    so the hand is much smaller.
+    Small size:
+    approximately 55% of
+    the controller visual.
   */
 
   hand.scale.set(
-    0.6,
-    0.6,
-    0.6
+    .55,
+    .55,
+    .55
   );
 
 
-  const skin =
-    new THREE.MeshStandardMaterial({
-      color:0xd69a78,
-      roughness:0.8
-    });
+  const material =
+  new THREE.MeshStandardMaterial({
+    color:0xd69a78,
+    roughness:.8
+  });
 
 
   const palm =
-    new THREE.Mesh(
-      new THREE.BoxGeometry(
-        0.18,
-        0.14,
-        0.22
-      ),
-      skin
-    );
-
-  palm.position.z = -0.02;
+  new THREE.Mesh(
+    new THREE.BoxGeometry(
+      .18,
+      .12,
+      .20
+    ),
+    material
+  );
 
   hand.add(palm);
-
-
-  const fingers = [];
 
 
   for(
@@ -557,107 +562,62 @@ function createHand(){
   ){
 
     const finger =
-      new THREE.Mesh(
-        new THREE.CapsuleGeometry(
-          0.018,
-          0.09,
-          4,
-          8
-        ),
-        skin
-      );
-
-
-    finger.position.set(
-      -0.06 + i * 0.04,
-      0,
-      -0.14
+    new THREE.Mesh(
+      new THREE.CapsuleGeometry(
+        .018,
+        .075,
+        4,
+        8
+      ),
+      material
     );
 
+    finger.position.set(
+      -.055 + i*.037,
+      0,
+      -.13
+    );
 
     finger.rotation.x =
-      Math.PI / 2;
-
+      Math.PI/2;
 
     hand.add(finger);
-
-    fingers.push(finger);
   }
 
 
   const thumb =
-    new THREE.Mesh(
-      new THREE.CapsuleGeometry(
-        0.02,
-        0.08,
-        4,
-        8
-      ),
-      skin
-    );
-
-
-  thumb.position.set(
-    -0.1,
-    -0.01,
-    -0.05
+  new THREE.Mesh(
+    new THREE.CapsuleGeometry(
+      .018,
+      .07,
+      4,
+      8
+    ),
+    material
   );
 
+  thumb.position.set(
+    -.095,
+    -.01,
+    -.04
+  );
 
   thumb.rotation.z =
-    -0.7;
-
+  -.7;
 
   hand.add(thumb);
-
-
-  hand.userData.fingers =
-    fingers;
-
-  hand.userData.thumb =
-    thumb;
 
 
   return hand;
 }
 
 
-/* =====================================================
-   HAND ANIMATION
-===================================================== */
+/* =========================
+   VR CONTROLLERS
+========================= */
 
-function setHandGrab(
-  hand,
-  grabbing
-){
+const controllers = [];
 
-  if(!hand){
-    return;
-  }
-
-
-  for(
-    const finger of
-    hand.userData.fingers
-  ){
-
-    finger.rotation.y =
-      grabbing
-        ? -0.9
-        : 0;
-  }
-
-
-  hand.userData.thumb.rotation.z =
-    grabbing
-      ? -0.2
-      : -0.7;
-}
-
-
-/* =====================================================
-   CREATE CONTROLLERS
-===================================================== */
 
 for(
   let i=0;
@@ -665,913 +625,378 @@ for(
   i++
 ){
 
-  const controller =
-    renderer.xr.getController(i);
+  const c =
+  renderer.xr.getController(i);
 
 
-  controller.userData.index =
-    i;
-
-
-  const pointer =
-    createPointer();
-
-
-  controller.add(
-    pointer
-  );
-
-
-  controller.userData.pointer =
-    pointer;
-
+  /*
+    Small visual hand.
+  */
 
   const hand =
-    createHand();
-
-
-  controller.add(
-    hand
-  );
-
-
-  controller.userData.hand =
-    hand;
+  makeSmallHand();
 
 
   /*
-    TRIGGER
+    Hide it initially.
+    It becomes visible in VR.
   */
 
-  controller.addEventListener(
+  hand.visible = true;
+
+  c.add(hand);
+
+
+  /*
+    Trigger = grab/release.
+  */
+
+  c.addEventListener(
     "selectstart",
-    function(){
-
-      try{
-
-        if(mode === "pointer"){
-
-          pointerGrab(
-            controller
-          );
-
-        }
-
-      }catch(error){
-
-        console.error(
-          "Pointer trigger error:",
-          error
-        );
-
-        showMessage(
-          "Pointer input error"
-        );
-      }
-
-    }
-  );
-
-
-  controller.addEventListener(
-    "selectend",
-    function(){
-
-      try{
-
-        if(mode === "pointer"){
-
-          pointerDrop(
-            controller
-          );
-
-        }
-
-      }catch(error){
-
-        console.error(
-          "Pointer release error:",
-          error
-        );
-
-        if(heldBlock){
-
-          heldBlock.userData.held =
-            false;
-
-          heldBlock = null;
-
-          heldController = null;
-        }
-
-      }
-
-    }
-  );
-
-
-  /*
-    GRIP
-  */
-
-  controller.addEventListener(
-    "squeezestart",
-    function(){
-
-      try{
-
-        if(mode === "hand"){
-
-          handGrab(
-            controller
-          );
-
-        }
-
-      }catch(error){
-
-        console.error(
-          "Hand grab error:",
-          error
-        );
-      }
-
-    }
-  );
-
-
-  controller.addEventListener(
-    "squeezeend",
-    function(){
-
-      try{
-
-        if(mode === "hand"){
-
-          handThrow(
-            controller
-          );
-
-        }
-
-      }catch(error){
-
-        console.error(
-          "Hand throw error:",
-          error
-        );
-
-      }
-
-    }
-  );
-
-
-  scene.add(
-    controller
-  );
-
-
-  controllers.push(
-    controller
-  );
-}
-
-
-/* =====================================================
-   CONTROLLER POSITION
-===================================================== */
-
-function getControllerPosition(
-  controller
-){
-
-  return new THREE.Vector3()
-    .setFromMatrixPosition(
-      controller.matrixWorld
-    );
-}
-
-
-/* =====================================================
-   CONTROLLER DIRECTION
-===================================================== */
-
-function getControllerDirection(
-  controller
-){
-
-  const quaternion =
-    controller.getWorldQuaternion(
-      new THREE.Quaternion()
-    );
-
-
-  return new THREE.Vector3(
-    0,
-    0,
-    -1
-  ).applyQuaternion(
-    quaternion
-  );
-}
-
-
-/* =====================================================
-   HAND GRAB
-===================================================== */
-
-function handGrab(
-  controller
-){
-
-  if(heldBlock){
-    return;
-  }
-
-
-  const handPosition =
-    getControllerPosition(
-      controller
-    );
-
-
-  let closestBlock = null;
-
-  let closestDistance = 0.6;
-
-
-  for(
-    const block of blocks
-  ){
-
-    if(block.userData.held){
-      continue;
-    }
-
-
-    const distance =
-      handPosition.distanceTo(
-        block.position
+    () => {
+
+      const origin =
+      new THREE.Vector3()
+      .setFromMatrixPosition(
+        c.matrixWorld
       );
 
 
-    if(
-      distance <
-      closestDistance
-    ){
-
-      closestBlock =
-        block;
-
-      closestDistance =
-        distance;
-    }
-
-  }
-
-
-  if(!closestBlock){
-
-    showMessage(
-      "Move your hand closer"
-    );
-
-    return;
-  }
-
-
-  heldBlock =
-    closestBlock;
-
-  heldController =
-    controller;
-
-
-  heldBlock.userData.held =
-    true;
-
-
-  setHandGrab(
-    controller.userData.hand,
-    true
-  );
-
-
-  showMessage(
-    "GRABBED"
-  );
-}
-
-
-/* =====================================================
-   CONTROLLER VELOCITY
-===================================================== */
-
-const previousPositions =
-  new Map();
-
-const controllerVelocities =
-  new Map();
-
-
-function updateControllerVelocity(
-  deltaTime
-){
-
-  for(
-    const controller of
-    controllers
-  ){
-
-    const current =
-      getControllerPosition(
-        controller
+      const q =
+      c.getWorldQuaternion(
+        tempQ
       );
 
 
-    const previous =
-      previousPositions.get(
-        controller
+      const dir =
+      new THREE.Vector3(
+        0,
+        0,
+        -1
+      ).applyQuaternion(q);
+
+
+      raycaster.set(
+        origin,
+        dir
       );
 
-
-    if(previous){
-
-      const velocity =
-        current
-          .clone()
-          .sub(previous)
-          .divideScalar(
-            Math.max(
-              deltaTime,
-              0.001
-            )
-          );
-
-
-      controllerVelocities.set(
-        controller,
-        velocity
-      );
-    }
-
-
-    previousPositions.set(
-      controller,
-      current
-    );
-  }
-}
-
-
-/* =====================================================
-   HAND THROW
-===================================================== */
-
-function handThrow(
-  controller
-){
-
-  if(
-    !heldBlock ||
-    heldController !== controller
-  ){
-
-    return;
-  }
-
-
-  const velocity =
-    controllerVelocities.get(
-      controller
-    );
-
-
-  heldBlock.userData.held =
-    false;
-
-
-  if(velocity){
-
-    heldBlock.userData.velocity
-      .copy(velocity)
-      .multiplyScalar(2.2);
-
-  }else{
-
-    heldBlock.userData.velocity.set(
-      0,
-      0,
-      0
-    );
-
-  }
-
-
-  heldBlock = null;
-
-  heldController = null;
-
-
-  setHandGrab(
-    controller.userData.hand,
-    false
-  );
-
-
-  showMessage(
-    "THROWN"
-  );
-}
-
-
-/* =====================================================
-   POINTER GRAB
-===================================================== */
-
-function pointerGrab(
-  controller
-){
-
-  if(heldBlock){
-    return;
-  }
-
-
-  const origin =
-    getControllerPosition(
-      controller
-    );
-
-
-  const direction =
-    getControllerDirection(
-      controller
-    );
-
-
-  raycaster.set(
-    origin,
-    direction
-  );
-
-
-  const intersections =
-    raycaster.intersectObjects(
-      blocks,
-      false
-    );
-
-
-  if(
-    intersections.length === 0
-  ){
-
-    showMessage(
-      "Point at a block"
-    );
-
-    return;
-  }
-
-
-  const hit =
-    intersections[0];
-
-
-  if(
-    hit.distance > 5
-  ){
-
-    showMessage(
-      "Too far away"
-    );
-
-    return;
-  }
-
-
-  heldBlock =
-    hit.object;
-
-
-  heldController =
-    controller;
-
-
-  heldBlock.userData.held =
-    true;
-
-
-  holdDistance =
-    THREE.MathUtils.clamp(
-      hit.distance,
-      0.7,
-      4
-    );
-
-
-  showMessage(
-    "HOLDING"
-  );
-}
-
-
-/* =====================================================
-   POINTER DROP
-===================================================== */
-
-function pointerDrop(
-  controller
-){
-
-  if(
-    !heldBlock ||
-    heldController !== controller
-  ){
-
-    return;
-  }
-
-
-  /*
-    IMPORTANT:
-    Pointer mode DOES NOT THROW.
-  */
-
-  heldBlock.userData.held =
-    false;
-
-
-  heldBlock.userData.velocity.set(
-    0,
-    0,
-    0
-  );
-
-
-  heldBlock = null;
-
-  heldController = null;
-
-
-  showMessage(
-    "DROPPED"
-  );
-}
-
-
-/* =====================================================
-   UPDATE POINTER
-===================================================== */
-
-function updatePointers(){
-
-  for(
-    const controller of
-    controllers
-  ){
-
-    const pointer =
-      controller.userData.pointer;
-
-
-    pointer.visible =
-      mode === "pointer" &&
-      renderer.xr.isPresenting;
-
-
-    if(!pointer.visible){
-      continue;
-    }
-
-
-    const origin =
-      getControllerPosition(
-        controller
-      );
-
-
-    const direction =
-      getControllerDirection(
-        controller
-      );
-
-
-    raycaster.set(
-      origin,
-      direction
-    );
-
-
-    const intersections =
-      raycaster.intersectObjects(
-        blocks,
-        false
-      );
-
-
-    let length = 5;
-
-
-    if(
-      intersections.length > 0
-    ){
 
       const hit =
-        intersections[0];
+      raycaster.intersectObjects(
+        blocks
+      )[0];
 
 
-      length =
-        Math.min(
-          hit.distance,
-          5
-        );
+      if(
+        hit &&
+        hit.distance < 5
+      ){
+
+        held === hit.object
+          ? release()
+          : grab(
+              hit.object,
+              c
+            );
+      }
+    }
+  );
 
 
-      pointer.material.color.setHex(
-        0x00ff66
+  scene.add(c);
+
+  controllers.push(c);
+}
+
+
+/* =========================
+   MOUSE LOOK
+========================= */
+
+let mouseLook = false;
+
+let lastX = 0;
+
+let lastY = 0;
+
+
+addEventListener(
+  "pointermove",
+  e => {
+
+    if(
+      !mouseLook ||
+      renderer.xr.isPresenting
+    )
+      return;
+
+
+    const dx =
+    e.clientX - lastX;
+
+    const dy =
+    e.clientY - lastY;
+
+
+    camera.rotation.order =
+    "YXZ";
+
+
+    camera.rotation.y -=
+    dx * .003;
+
+
+    camera.rotation.x =
+    Math.max(
+      -1.45,
+      Math.min(
+        1.45,
+        camera.rotation.x -
+        dy * .003
+      )
+    );
+
+
+    lastX =
+    e.clientX;
+
+    lastY =
+    e.clientY;
+  }
+);
+
+
+addEventListener(
+  "pointerdown",
+  e => {
+
+    if(
+      !renderer.xr.isPresenting
+    ){
+
+      mouseLook = true;
+
+      lastX =
+      e.clientX;
+
+      lastY =
+      e.clientY;
+    }
+  }
+);
+
+
+addEventListener(
+  "pointerup",
+  () => {
+
+    mouseLook = false;
+  }
+);
+
+
+/* =========================
+   ANIMATION
+========================= */
+
+const clock =
+new THREE.Clock();
+
+
+function animate(){
+
+  const dt =
+  Math.min(
+    clock.getDelta(),
+    .033
+  );
+
+
+  /*
+    Held block follows
+    the VR controller.
+  */
+
+  if(held){
+
+    if(
+      renderer.xr.isPresenting &&
+      heldController
+    ){
+
+      const origin =
+      new THREE.Vector3()
+      .setFromMatrixPosition(
+        heldController.matrixWorld
+      );
+
+
+      const dir =
+      new THREE.Vector3(
+        0,
+        0,
+        -1
+      ).applyQuaternion(
+        heldController.getWorldQuaternion(
+          tempQ
+        )
+      );
+
+
+      held.position.copy(
+        origin
+      );
+
+      held.position.addScaledVector(
+        dir,
+        1.15
+      );
+
+      held.userData.vel.set(
+        0,
+        0,
+        0
       );
 
     }else{
 
-      pointer.material.color.setHex(
-        0x00ffff
-      );
-    }
-
-
-    pointer.geometry.setFromPoints([
-      new THREE.Vector3(0,0,0),
+      const dir =
       new THREE.Vector3(
         0,
         0,
-        -length
-      )
-    ]);
-  }
-}
+        -1
+      ).applyQuaternion(
+        camera.quaternion
+      );
 
 
-/* =====================================================
-   JOYSTICK
-===================================================== */
+      held.position.copy(
+        camera.position
+      );
 
-function updateJoystick(){
+      held.position.addScaledVector(
+        dir,
+        1.2
+      );
 
-  if(
-    mode !== "pointer" ||
-    !heldBlock ||
-    !heldController
-  ){
-
-    return;
-  }
-
-
-  const session =
-    renderer.xr.getSession();
-
-
-  if(!session){
-    return;
-  }
-
-
-  const wantedHand =
-    heldController.userData.index === 0
-      ? "left"
-      : "right";
-
-
-  let source = null;
-
-
-  for(
-    const input of
-    session.inputSources
-  ){
-
-    if(
-      input.handedness ===
-        wantedHand &&
-      input.gamepad
-    ){
-
-      source = input;
-
-      break;
+      held.userData.vel.set(
+        0,
+        0,
+        0
+      );
     }
-  }
-
-
-  if(!source){
-    return;
-  }
-
-
-  const axes =
-    source.gamepad.axes;
-
-
-  if(
-    !axes ||
-    axes.length < 2
-  ){
-
-    return;
   }
 
 
   /*
-    Quest controllers normally expose
-    the thumbstick through these axes.
+    Basic physics.
   */
 
-  const y =
-    axes.length >= 4
-      ? axes[3]
-      : axes[1];
-
-
-  if(
-    Math.abs(y) > 0.12
+  for(
+    const b of blocks
   ){
 
-    holdDistance +=
-      y * 0.035;
+    if(b.userData.held)
+      continue;
 
 
-    holdDistance =
-      THREE.MathUtils.clamp(
-        holdDistance,
-        0.7,
-        4
-      );
-  }
-}
+    const v =
+    b.userData.vel;
 
 
-/* =====================================================
-   MOVE HELD BLOCK
-===================================================== */
-
-function updateHeldBlock(){
-
-  if(
-    !heldBlock ||
-    !heldController
-  ){
-
-    return;
-  }
+    v.y -=
+    7 * dt;
 
 
-  const origin =
-    getControllerPosition(
-      heldController
+    b.position.addScaledVector(
+      v,
+      dt
     );
 
 
-  if(
-    mode === "pointer"
-  ){
-
-    const direction =
-      getControllerDirection(
-        heldController
-      );
+    const half =
+    .275;
 
 
-    heldBlock.position.copy(
-      origin
-    );
+    if(
+      b.position.y <
+      half
+    ){
+
+      b.position.y =
+      half;
+
+      v.y *=
+      -.25;
+
+      v.x *=
+      .92;
+
+      v.z *=
+      .92;
+    }
 
 
-    heldBlock.position.addScaledVector(
-      direction,
-      holdDistance
-    );
+    if(
+      b.position.x <
+      -3.7 ||
+      b.position.x >
+      3.7
+    ){
 
-  }else{
+      v.x *=
+      -.4;
+    }
 
-    /*
-      Hand mode:
-      block stays in the hand.
-    */
 
-    heldBlock.position.copy(
-      origin
-    );
+    if(
+      b.position.z <
+      -3.7 ||
+      b.position.z >
+      3.7
+    ){
+
+      v.z *=
+      -.4;
+    }
   }
 
 
-  heldBlock.userData.velocity.set(
-    0,
-    0,
-    0
+  renderer.render(
+    scene,
+    camera
   );
 }
 
 
-/* =====================================================
-   PHYSICS
-===================================================== */
-
-function updatePhysics(
-  deltaTime
-){
-
-  for(
-    const block of blocks
-  ){
-
-    if(block.userData.held){
-      continue;
-    }
+renderer.setAnimationLoop(
+  animate
+);
 
 
-    const velocity =
-      block.userData.velocity;
+/* =========================
+   RESIZE
+========================= */
 
+addEventListener(
+  "resize",
+  () => {
 
-    velocity.y -=
-      7 * deltaTime;
+    camera.aspect =
+    innerWidth /
+    innerHeight;
 
+    camera.updateProjectionMatrix();
 
-    block.position.addScaledVector(
-      velocity,
-      deltaTime
+    renderer.setSize(
+      innerWidth,
+      innerHeight
     );
+  }
+);
 
+</script>
 
-    /*
-      Floor
-    */
-
-    if(
-      block.position.y <
-      HALF_BLOCK
-    ){
-
-      block.position.y =
-        HALF_BLOCK;
-
-
-      if(
-        velocity.y < 0
-      ){
-
-        velocity.y *=
-          -0.25;
-      }
-
-
-      velocity.x *=
-        0.92;
-
-      velocity.z *=
-        0.92;
-    }
-
-
-    /*
-      Walls
-    */
-
-    if(
-      block.position.x <
-      -3.7
-    ){
-
-      block.position.x =
-        -3.7;
-
-      velocity.x *=
-        -0.4;
-    }
-
-
-    if(
-      block.position.x >
-      3.7
-    ){
-
-      block.position.x =
-        3.7;
-
-      velocity.x *=
-        -0.4;
-    }
-
-
-    if(
-      block.position.z <
-      -3.7
-    ){
-
-      block.position.z =
-        -3.7;
-
-      
+</body>
+</html>
